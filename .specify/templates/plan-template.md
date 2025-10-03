@@ -1,4 +1,3 @@
-
 # Implementation Plan: [FEATURE]
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
@@ -47,7 +46,11 @@
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- Next.js 15 App Router compliance (Server Components by default, Server Actions for mutations, no `pages/api`)
+- Type Safety guarantees (strict TypeScript, explicit exports, no `any` without justification)
+- Component architecture boundaries (containers vs. presentation, hooks for shared logic)
+- Performance obligations (PPR in mixed routes, Suspense streaming, bundle <200KB of client JS)
+- Development standards (routing/data flow patterns, validation, error boundaries, Tailwind usage)
 
 ## Project Structure
 
@@ -66,21 +69,29 @@ specs/[###-feature]/
 <!--
   ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
   for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  real paths (e.g., app/(admin), lib/data, components/ui). The delivered plan must
   not include Option labels.
 -->
 ```
 # [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
+app/
+├── (feature)/
+│   ├── page.tsx
+│   ├── layout.tsx
+│   ├── loading.tsx
+│   ├── error.tsx
+│   └── components/
+├── api/
+│   └── [resource]/route.ts
+lib/
+├── data/
 ├── services/
-├── cli/
-└── lib/
+└── validators/
 
-tests/
-├── contract/
+__tests__/
+├── unit/
 ├── integration/
-└── unit/
+└── e2e/
 
 # [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
 backend/
@@ -91,11 +102,10 @@ backend/
 └── tests/
 
 frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
+├── app/
+│   ├── (feature)/
+│   └── api/
+└── __tests__/
 
 # [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
 api/
@@ -138,14 +148,13 @@ directories captured above]
    - State transitions if applicable
 
 2. **Generate API contracts** from functional requirements:
-   - For each user action → endpoint
-   - Use standard REST/GraphQL patterns
-   - Output OpenAPI/GraphQL schema to `/contracts/`
+   - For each user action → endpoint or Server Action signature
+   - Prefer Route Handlers (`app/api`) over legacy endpoints
+   - Output typed request/response schemas alongside HTTP contract tests
 
 3. **Generate contract tests** from contracts:
-   - One test file per endpoint
-   - Assert request/response schemas
-   - Tests must fail (no implementation yet)
+   - One test file per endpoint or Server Action
+   - Assert request/response schemas and cache invalidation triggers
 
 4. **Extract test scenarios** from user stories:
    - Each story → integration test scenario
@@ -168,14 +177,14 @@ directories captured above]
 **Task Generation Strategy**:
 - Load `.specify/templates/tasks-template.md` as base
 - Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
-- Each contract → contract test task [P]
-- Each entity → model creation task [P] 
+- Each contract or Server Action → contract test task [P]
+- Each entity → model or data-layer task [P]
 - Each user story → integration test task
-- Implementation tasks to make tests pass
+- Implementation tasks ensure Server Component boundaries, caching directives, and Tailwind styling
 
 **Ordering Strategy**:
 - TDD order: Tests before implementation 
-- Dependency order: Models before services before UI
+- Dependency order: Data utilities before components before routing
 - Mark [P] for parallel execution (independent files)
 
 **Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
@@ -194,8 +203,8 @@ directories captured above]
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| [e.g., introduce new cache policy] | [current need] | [why existing cache insufficient] |
+| [e.g., add client component at route root] | [specific problem] | [why server rendering insufficient] |
 
 
 ## Progress Tracking
@@ -216,4 +225,4 @@ directories captured above]
 - [ ] Complexity deviations documented
 
 ---
-*Based on Constitution v2.1.1 - See `/memory/constitution.md`*
+*Based on Constitution v1.1.0 - See `/memory/constitution.md`*

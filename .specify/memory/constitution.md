@@ -1,29 +1,25 @@
 <!--
 Sync Impact Report:
-Version: 0.0.0 → 1.0.0
-Rationale: Initial constitution creation (MAJOR bump - establishing governance from scratch)
+Version: 1.0.0 → 1.1.0
+Rationale: Expanded Next.js 15 guidance and aligned workflow templates (MINOR bump - new enforceable rules)
 
 Modified Principles:
-- Created: I. Clean & Modular Code
-- Created: II. Next.js 15 Best Practices
-- Created: III. Type Safety
-- Created: IV. Component Architecture
-- Created: V. Performance First
+- II. Next.js 15 Best Practices (expanded requirements)
+- V. Performance First (PPR and streaming mandates)
 
 Added Sections:
-- Core Principles
-- Development Standards
-- Quality Gates
-- Governance
+- Development Standards → Routing & Data Flow
+
+Removed Sections:
+- None
 
 Templates Requiring Updates:
-✅ plan-template.md - Constitution Check section references this version
-✅ spec-template.md - No conflicts, requirements alignment verified
-✅ tasks-template.md - Task categorization aligns with principles
-✅ agent-file-template.md - Generic template, no agent-specific references
+✅ .specify/templates/plan-template.md - Constitution reference and gates synced
+✅ .specify/templates/tasks-template.md - Tasks adjusted for Next.js workflow
+✅ CLAUDE.md - Verified alignment with new principles (no edits required)
 
 Follow-up TODOs:
-- None (all placeholders resolved)
+- None (all directives resolved)
 -->
 
 # Spec Kit Example Constitution
@@ -38,13 +34,13 @@ Code MUST be organized into focused, single-responsibility modules. Each compone
 
 ### II. Next.js 15 Best Practices
 
-All code MUST follow Next.js 15 App Router conventions. Use Server Components by default; mark Client Components explicitly with 'use client' only when required for interactivity, browser APIs, or React hooks. Data fetching MUST use native fetch with proper caching strategies (force-cache, no-store, revalidate). Metadata MUST be defined using the Metadata API. File-based routing MUST be used for all pages. Dynamic imports MUST be used for code-splitting heavy components.
+All features MUST use Next.js 15 App Router primitives end-to-end. Routes live in `app/` and default to Server Components; add `use client` only when code touches browser-only APIs, imperative focus management, or stateful UI. Server Actions (`use server`) or typed Route Handlers in `app/api/*/route.ts` MUST perform every mutation—`pages/api` and ad-hoc fetch proxies are forbidden. Data fetching MUST rely on native `fetch`, `cache`, and segment config: declare `dynamic`, `revalidate`, or `fetch` cache directives explicitly and co-locate `generateStaticParams` for static paths. Layouts MUST implement the Metadata API. Each route segment MUST register `loading.tsx`, `error.tsx`, and `not-found.tsx` when applicable. Heavy client-only dependencies MUST be isolated behind dynamic imports with suspense fallbacks.
 
-**Rationale**: Next.js 15 provides significant performance improvements through the App Router and React Server Components. Following framework conventions ensures optimal bundle sizes, automatic optimizations, and future compatibility.
+**Rationale**: Aligning with the App Router unlocks React Server Components, granular caching, and zero-cost streaming. Strict separation between server and client concerns keeps bundles lean and makes framework upgrades frictionless.
 
 ### III. Type Safety
 
-TypeScript strict mode MUST be enabled. All functions MUST have explicit return types. Component props MUST use interface or type definitions. No 'any' types without documented justification. Type inference should be leveraged for local variables, but exported APIs MUST have explicit types.
+TypeScript strict mode MUST be enabled. All functions MUST have explicit return types. Component props MUST use interface or type definitions. No `any` types without documented justification. Type inference should be leveraged for local variables, but exported APIs MUST have explicit types.
 
 **Rationale**: Type safety catches errors at compile-time, serves as living documentation, and enables superior IDE support. Strict typing prevents runtime errors and improves refactoring confidence.
 
@@ -56,17 +52,23 @@ Components MUST separate concerns: presentation components for UI, container com
 
 ### V. Performance First
 
-Images MUST use next/image with explicit width/height or fill mode. Fonts MUST use next/font for automatic optimization. Third-party scripts MUST use next/script with appropriate loading strategies. Client-side JavaScript MUST be minimized—prefer Server Components. Bundle size MUST be monitored; warn when page bundles exceed 200KB. Implement proper loading states and Suspense boundaries.
+Images MUST use `next/image` with explicit width/height or fill mode. Fonts MUST use `next/font` for automatic optimization. Third-party scripts MUST use `next/script` with appropriate loading strategies. Partial Prerendering (PPR) MUST be enabled for routes with mixed static and dynamic regions; streaming Suspense boundaries MUST prevent blank states. Server Actions MUST invalidate caches with `revalidatePath` or `revalidateTag` immediately after mutations. Bundle size MUST be monitored—warn when any page bundle exceeds 200KB of client JavaScript. Implement skeleton or progress UIs via Suspense rather than imperative loaders.
 
 **Rationale**: Performance directly impacts user experience, SEO, and conversion rates. Next.js provides primitives for optimization—we MUST leverage them by default, not as an afterthought.
 
 ## Development Standards
 
 ### Code Organization
-- Use path aliases (@/*) for imports—no relative paths beyond sibling directories
-- Group related files in feature folders (components, hooks, utils, types)
-- Keep app/ directory clean—only routing files and layouts
-- Extract business logic into separate lib/ or services/ directories
+- Use path aliases (`@/*`) for imports—no relative paths beyond sibling directories
+- Group related files in feature folders (e.g., `app/(marketing)/`, `components/`, `lib/`, `server-actions/`)
+- Keep `app/` focused on routing, layouts, and entry components; move business logic into `lib/` or dedicated service modules
+- Extract cross-cutting utilities (formatters, adapters) into `lib/` with colocated tests
+
+### Routing & Data Flow
+- Route Handlers in `app/api` MUST return typed `NextResponse` objects with explicit status codes
+- Server Actions MUST validate input with shared schema utilities and handle errors via union return types, not throw/catch chains
+- Revalidation strategy MUST be declared per mutation (`revalidatePath`/`revalidateTag`) and documented in code comments when non-obvious
+- Shared data loaders MUST live in `lib/` or `app/_data` modules and be wrapped in `cache()` when safe to memoize on the server
 
 ### Styling
 - Use Tailwind CSS v4 for styling—no CSS modules or styled-components
@@ -75,7 +77,7 @@ Images MUST use next/image with explicit width/height or fill mode. Fonts MUST u
 - Use CSS variables for theming when needed
 
 ### Error Handling
-- Use error.tsx and not-found.tsx boundary files appropriately
+- Use `error.tsx` and `not-found.tsx` boundary files appropriately
 - Provide meaningful error messages for development and user-friendly messages for production
 - Log errors with sufficient context for debugging
 - Handle loading states explicitly—no layout shift
@@ -83,23 +85,23 @@ Images MUST use next/image with explicit width/height or fill mode. Fonts MUST u
 ## Quality Gates
 
 ### Pre-Commit Requirements
-- TypeScript compilation MUST succeed with zero errors
-- No ESLint errors (warnings acceptable with justification)
+- TypeScript compilation (`npx tsc --noEmit`) MUST succeed with zero errors
+- `npx next lint` MUST pass with no errors; warnings require comments linking to tracked follow-ups
 - Code formatting via Prettier (if configured) MUST pass
 - Unused imports and variables MUST be removed
 
 ### Pre-Merge Requirements
-- Build process (npm run build) MUST complete successfully
-- No console.log statements in production code (use proper logging utilities)
-- All new components MUST have proper TypeScript types
-- Breaking changes MUST be documented in commit messages
+- Production build (`npm run build`) MUST complete successfully
+- No `console.log` statements in production code (use structured logging utilities when needed)
+- All new components MUST have proper TypeScript types and prop-level documentation when complex
+- Breaking changes MUST be documented in commit messages and linked specs/plan docs
 
 ### Review Checklist
-- Server/Client component boundaries correctly defined
-- No unnecessary 'use client' directives
-- Proper data fetching patterns (not mixing client/server data fetching)
+- Server/Client component boundaries correctly defined with minimal `use client`
+- Server Actions and Route Handlers enforce validation and cache revalidation
+- Data fetching patterns honor caching directives and avoid mixing client/server fetching
 - Accessibility considerations addressed (semantic HTML, ARIA when needed)
-- Mobile responsiveness verified
+- Mobile responsiveness and streaming fallbacks verified
 
 ## Governance
 
@@ -126,4 +128,4 @@ When constitution is amended, the following templates MUST be reviewed and updat
 - `.specify/templates/agent-file-template.md` (Development guidelines)
 - `CLAUDE.md` or other agent-specific guidance files
 
-**Version**: 1.0.0 | **Ratified**: 2025-10-03 | **Last Amended**: 2025-10-03
+**Version**: 1.1.0 | **Ratified**: 2025-10-03 | **Last Amended**: 2025-10-03

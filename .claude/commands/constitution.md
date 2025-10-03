@@ -1,73 +1,131 @@
----
-description: Create or update the project constitution from interactive or provided principle inputs, ensuring all dependent templates stay in sync.
----
+<!--
+Sync Impact Report:
+Version: 1.0.0 → 1.1.0
+Rationale: Expanded Next.js 15 guidance and aligned workflow templates (MINOR bump - new enforceable rules)
 
-The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding with the prompt (if not empty).
+Modified Principles:
+- II. Next.js 15 Best Practices (expanded requirements)
+- V. Performance First (PPR and streaming mandates)
 
-User input:
+Added Sections:
+- Development Standards → Routing & Data Flow
 
-$ARGUMENTS
+Removed Sections:
+- None
 
-You are updating the project constitution at `.specify/memory/constitution.md`. This file is a TEMPLATE containing placeholder tokens in square brackets (e.g. `[PROJECT_NAME]`, `[PRINCIPLE_1_NAME]`). Your job is to (a) collect/derive concrete values, (b) fill the template precisely, and (c) propagate any amendments across dependent artifacts.
+Templates Requiring Updates:
+✅ .specify/templates/plan-template.md - Constitution reference and gates synced
+✅ .specify/templates/tasks-template.md - Tasks adjusted for Next.js workflow
+✅ CLAUDE.md - Verified alignment with new principles (no edits required)
 
-Follow this execution flow:
+Follow-up TODOs:
+- None (all directives resolved)
+-->
 
-1. Load the existing constitution template at `.specify/memory/constitution.md`.
-   - Identify every placeholder token of the form `[ALL_CAPS_IDENTIFIER]`.
-   **IMPORTANT**: The user might require less or more principles than the ones used in the template. If a number is specified, respect that - follow the general template. You will update the doc accordingly.
+# Spec Kit Example Constitution
 
-2. Collect/derive values for placeholders:
-   - If user input (conversation) supplies a value, use it.
-   - Otherwise infer from existing repo context (README, docs, prior constitution versions if embedded).
-   - For governance dates: `RATIFICATION_DATE` is the original adoption date (if unknown ask or mark TODO), `LAST_AMENDED_DATE` is today if changes are made, otherwise keep previous.
-   - `CONSTITUTION_VERSION` must increment according to semantic versioning rules:
-     * MAJOR: Backward incompatible governance/principle removals or redefinitions.
-     * MINOR: New principle/section added or materially expanded guidance.
-     * PATCH: Clarifications, wording, typo fixes, non-semantic refinements.
-   - If version bump type ambiguous, propose reasoning before finalizing.
+## Core Principles
 
-3. Draft the updated constitution content:
-   - Replace every placeholder with concrete text (no bracketed tokens left except intentionally retained template slots that the project has chosen not to define yet—explicitly justify any left).
-   - Preserve heading hierarchy and comments can be removed once replaced unless they still add clarifying guidance.
-   - Ensure each Principle section: succinct name line, paragraph (or bullet list) capturing non‑negotiable rules, explicit rationale if not obvious.
-   - Ensure Governance section lists amendment procedure, versioning policy, and compliance review expectations.
+### I. Clean & Modular Code
 
-4. Consistency propagation checklist (convert prior checklist into active validations):
-   - Read `.specify/templates/plan-template.md` and ensure any "Constitution Check" or rules align with updated principles.
-   - Read `.specify/templates/spec-template.md` for scope/requirements alignment—update if constitution adds/removes mandatory sections or constraints.
-   - Read `.specify/templates/tasks-template.md` and ensure task categorization reflects new or removed principle-driven task types (e.g., observability, versioning, testing discipline).
-   - Read each command file in `.specify/templates/commands/*.md` (including this one) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required.
-   - Read any runtime guidance docs (e.g., `README.md`, `docs/quickstart.md`, or agent-specific guidance files if present). Update references to principles changed.
+Code MUST be organized into focused, single-responsibility modules. Each component, function, or utility MUST have a clear, well-defined purpose. Code duplication is forbidden—shared logic MUST be extracted into reusable utilities or hooks. Components MUST NOT exceed 250 lines; refactor into smaller components when this limit is approached.
 
-5. Produce a Sync Impact Report (prepend as an HTML comment at top of the constitution file after update):
-   - Version change: old → new
-   - List of modified principles (old title → new title if renamed)
-   - Added sections
-   - Removed sections
-   - Templates requiring updates (✅ updated / ⚠ pending) with file paths
-   - Follow-up TODOs if any placeholders intentionally deferred.
+**Rationale**: Modular code improves maintainability, testability, and team collaboration. Clear boundaries reduce cognitive load and make the codebase accessible to new contributors.
 
-6. Validation before final output:
-   - No remaining unexplained bracket tokens.
-   - Version line matches report.
-   - Dates ISO format YYYY-MM-DD.
-   - Principles are declarative, testable, and free of vague language ("should" → replace with MUST/SHOULD rationale where appropriate).
+### II. Next.js 15 Best Practices
 
-7. Write the completed constitution back to `.specify/memory/constitution.md` (overwrite).
+All features MUST use Next.js 15 App Router primitives end-to-end. Routes live in `app/` and default to Server Components; add `use client` only when code touches browser-only APIs, imperative focus management, or stateful UI. Server Actions (`use server`) or typed Route Handlers in `app/api/*/route.ts` MUST perform every mutation—`pages/api` and ad-hoc fetch proxies are forbidden. Data fetching MUST rely on native `fetch`, `cache`, and segment config: declare `dynamic`, `revalidate`, or `fetch` cache directives explicitly and co-locate `generateStaticParams` for static paths. Layouts MUST implement the Metadata API. Each route segment MUST register `loading.tsx`, `error.tsx`, and `not-found.tsx` when applicable. Heavy client-only dependencies MUST be isolated behind dynamic imports with suspense fallbacks.
 
-8. Output a final summary to the user with:
-   - New version and bump rationale.
-   - Any files flagged for manual follow-up.
-   - Suggested commit message (e.g., `docs: amend constitution to vX.Y.Z (principle additions + governance update)`).
+**Rationale**: Aligning with the App Router unlocks React Server Components, granular caching, and zero-cost streaming. Strict separation between server and client concerns keeps bundles lean and makes framework upgrades frictionless.
 
-Formatting & Style Requirements:
-- Use Markdown headings exactly as in the template (do not demote/promote levels).
-- Wrap long rationale lines to keep readability (<100 chars ideally) but do not hard enforce with awkward breaks.
-- Keep a single blank line between sections.
-- Avoid trailing whitespace.
+### III. Type Safety
 
-If the user supplies partial updates (e.g., only one principle revision), still perform validation and version decision steps.
+TypeScript strict mode MUST be enabled. All functions MUST have explicit return types. Component props MUST use interface or type definitions. No `any` types without documented justification. Type inference should be leveraged for local variables, but exported APIs MUST have explicit types.
 
-If critical info missing (e.g., ratification date truly unknown), insert `TODO(<FIELD_NAME>): explanation` and include in the Sync Impact Report under deferred items.
+**Rationale**: Type safety catches errors at compile-time, serves as living documentation, and enables superior IDE support. Strict typing prevents runtime errors and improves refactoring confidence.
 
-Do not create a new template; always operate on the existing `.specify/memory/constitution.md` file.
+### IV. Component Architecture
+
+Components MUST separate concerns: presentation components for UI, container components for data/logic. Custom hooks MUST be used for reusable stateful logic. Server Components MUST NOT import client-side dependencies. Client Components MUST be pushed to the leaves of the component tree. Component files MUST include types, implementation, and exports—no logic in barrel exports.
+
+**Rationale**: Clear architectural boundaries make components predictable, testable, and reusable. Server/Client separation maximizes performance gains from React Server Components.
+
+### V. Performance First
+
+Images MUST use `next/image` with explicit width/height or fill mode. Fonts MUST use `next/font` for automatic optimization. Third-party scripts MUST use `next/script` with appropriate loading strategies. Partial Prerendering (PPR) MUST be enabled for routes with mixed static and dynamic regions; streaming Suspense boundaries MUST prevent blank states. Server Actions MUST invalidate caches with `revalidatePath` or `revalidateTag` immediately after mutations. Bundle size MUST be monitored—warn when any page bundle exceeds 200KB of client JavaScript. Implement skeleton or progress UIs via Suspense rather than imperative loaders.
+
+**Rationale**: Performance directly impacts user experience, SEO, and conversion rates. Next.js provides primitives for optimization—we MUST leverage them by default, not as an afterthought.
+
+## Development Standards
+
+### Code Organization
+- Use path aliases (`@/*`) for imports—no relative paths beyond sibling directories
+- Group related files in feature folders (e.g., `app/(marketing)/`, `components/`, `lib/`, `server-actions/`)
+- Keep `app/` focused on routing, layouts, and entry components; move business logic into `lib/` or dedicated service modules
+- Extract cross-cutting utilities (formatters, adapters) into `lib/` with colocated tests
+
+### Routing & Data Flow
+- Route Handlers in `app/api` MUST return typed `NextResponse` objects with explicit status codes
+- Server Actions MUST validate input with shared schema utilities and handle errors via union return types, not throw/catch chains
+- Revalidation strategy MUST be declared per mutation (`revalidatePath`/`revalidateTag`) and documented in code comments when non-obvious
+- Shared data loaders MUST live in `lib/` or `app/_data` modules and be wrapped in `cache()` when safe to memoize on the server
+
+### Styling
+- Use Tailwind CSS v4 for styling—no CSS modules or styled-components
+- Follow mobile-first responsive design patterns
+- Extract repeated utility combinations into component variants
+- Use CSS variables for theming when needed
+
+### Error Handling
+- Use `error.tsx` and `not-found.tsx` boundary files appropriately
+- Provide meaningful error messages for development and user-friendly messages for production
+- Log errors with sufficient context for debugging
+- Handle loading states explicitly—no layout shift
+
+## Quality Gates
+
+### Pre-Commit Requirements
+- TypeScript compilation (`npx tsc --noEmit`) MUST succeed with zero errors
+- `npx next lint` MUST pass with no errors; warnings require comments linking to tracked follow-ups
+- Code formatting via Prettier (if configured) MUST pass
+- Unused imports and variables MUST be removed
+
+### Pre-Merge Requirements
+- Production build (`npm run build`) MUST complete successfully
+- No `console.log` statements in production code (use structured logging utilities when needed)
+- All new components MUST have proper TypeScript types and prop-level documentation when complex
+- Breaking changes MUST be documented in commit messages and linked specs/plan docs
+
+### Review Checklist
+- Server/Client component boundaries correctly defined with minimal `use client`
+- Server Actions and Route Handlers enforce validation and cache revalidation
+- Data fetching patterns honor caching directives and avoid mixing client/server fetching
+- Accessibility considerations addressed (semantic HTML, ARIA when needed)
+- Mobile responsiveness and streaming fallbacks verified
+
+## Governance
+
+### Amendment Process
+Constitution changes require:
+1. Documented rationale explaining the need for amendment
+2. Impact assessment on existing code and templates
+3. Version bump following semantic versioning (see below)
+4. Update to all dependent templates and documentation
+
+### Versioning Policy
+- **MAJOR**: Principle removal, redefinition, or incompatible governance changes
+- **MINOR**: New principle additions or material expansions to existing principles
+- **PATCH**: Clarifications, wording improvements, non-semantic corrections
+
+### Compliance
+All code reviews MUST verify constitutional compliance. Deviations MUST be justified in plan.md Complexity Tracking section. Simplification MUST be attempted before accepting complexity. The constitution supersedes team preferences—challenge principles through amendment process, not ad-hoc violations.
+
+### Template Synchronization
+When constitution is amended, the following templates MUST be reviewed and updated:
+- `.specify/templates/plan-template.md` (Constitution Check section)
+- `.specify/templates/spec-template.md` (Requirements alignment)
+- `.specify/templates/tasks-template.md` (Task categorization)
+- `.specify/templates/agent-file-template.md` (Development guidelines)
+- `CLAUDE.md` or other agent-specific guidance files
+
+**Version**: 1.1.0 | **Ratified**: 2025-10-03 | **Last Amended**: 2025-10-03
