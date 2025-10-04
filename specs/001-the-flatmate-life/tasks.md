@@ -14,180 +14,211 @@ This document provides a dependency-ordered task list for implementing the Flatm
 
 ---
 
-## Phase 3.1: Foundation Setup (8 tasks)
+## Phase 3.1: Foundation Setup (8 tasks) ✅
 
-### T001 [P] Initialize Next.js 15 project structure
+### T001 [X] [P] Initialize Next.js 15 project structure
+
 **Path**: Repository root
 **Description**: Verify Next.js 15.5.4 with App Router, TypeScript strict mode, and Turbopack configuration
 **Actions**:
+
 - Confirm `next.config.ts` has Turbopack enabled
 - Verify `tsconfig.json` has strict mode and path aliases (`@/*`)
 - Create base `app/` directory structure with layout.tsx
-**Dependencies**: None
-**Validation**: `npx tsc --noEmit` passes
+  **Dependencies**: None
+  **Validation**: `npx tsc --noEmit` passes
 
 ---
 
-### T002 [P] Install core dependencies
+### T002 [X] [P] Install core dependencies
+
 **Path**: `package.json`
 **Description**: Install all dependencies declared in plan.md
 **Actions**:
+
 ```bash
 npm install zod@3.x next-intl@3.x zustand@4.x
 npm install -D @types/node typescript eslint prettier
 ```
+
 **Dependencies**: None
 **Validation**: `npm install` completes without errors
 
 ---
 
-### T003 [P] Setup shadcn/ui base components
+### T003 [X] [P] Setup shadcn/ui base components
+
 **Path**: `components/ui/`
 **Description**: Initialize shadcn/ui with Radix UI primitives and Tailwind v4
 **Actions**:
+
 ```bash
 npx shadcn-ui@latest init
 npx shadcn-ui@latest add button card dialog form input label select
 ```
+
 **Dependencies**: None
 **Validation**: Components appear in `components/ui/`
 
 ---
 
-### T004 [P] Configure linting and formatting
+### T004 [X] [P] Configure linting and formatting
+
 **Path**: `.eslintrc.json`, `.prettierrc`, `.husky/`
 **Description**: Setup ESLint, Prettier, Husky, and commitlint
 **Actions**:
+
 - Configure ESLint with Next.js and TypeScript rules
 - Setup Prettier with consistent formatting
 - Install Husky pre-commit hooks
 - Configure commitlint for Conventional Commits
-**Dependencies**: None
-**Validation**: `npm run lint` passes on empty codebase
+  **Dependencies**: None
+  **Validation**: `npm run lint` passes on empty codebase
 
 ---
 
-### T005 [P] Configure Tailwind CSS v4
+### T005 [X] [P] Configure Tailwind CSS v4
+
 **Path**: `tailwind.config.ts`, `app/globals.css`
 **Description**: Setup Tailwind with theme tokens and radix-colors
 **Actions**:
+
 - Configure theme with CSS variables for light/dark modes
 - Import radix-colors for accessible color scales
 - Setup responsive breakpoints
-**Dependencies**: None
-**Validation**: Build succeeds with Tailwind classes
+  **Dependencies**: None
+  **Validation**: Build succeeds with Tailwind classes
 
 ---
 
-### T006 [P] Setup test infrastructure (Jest + RTL)
+### T006 [X] [P] Setup test infrastructure (Jest + RTL)
+
 **Path**: `jest.config.js`, `__tests__/setup.ts`
 **Description**: Configure Jest with React Testing Library and Next.js support
 **Actions**:
+
 - Install `@testing-library/react`, `@testing-library/jest-dom`
 - Configure Jest for TypeScript and Next.js App Router
 - Setup test utilities and custom matchers
-**Dependencies**: None
-**Validation**: `npm test` runs (with no tests yet)
+  **Dependencies**: None
+  **Validation**: `npm test` runs (with no tests yet)
 
 ---
 
-### T007 [P] Setup Playwright for E2E tests
+### T007 [X] [P] Setup Playwright for E2E tests
+
 **Path**: `playwright.config.ts`, `__tests__/e2e/`
 **Description**: Configure Playwright with PWA testing support
 **Actions**:
+
 - Install `@playwright/test`
 - Configure browsers (Chromium, Firefox, WebKit)
 - Setup base URL and viewport sizes
-**Dependencies**: None
-**Validation**: `npx playwright test` runs (with no tests yet)
+  **Dependencies**: None
+  **Validation**: `npx playwright test` runs (with no tests yet)
 
 ---
 
-### T008 [P] Create base route structure
+### T008 [X] [P] Create base route structure
+
 **Path**: `app/` directory
 **Description**: Scaffold all route directories with placeholder pages
 **Actions**:
+
 - Create directories: `(dashboard)/`, `expenses/`, `groceries/`, `chores/`, `gym/`, `notes/`, `chat/`, `settings/`, `auth/`, `setup/`, `api/`
 - Add placeholder `page.tsx` in each route
 - Add `loading.tsx` and `error.tsx` templates
-**Dependencies**: T001
-**Validation**: All routes render without errors
+  **Dependencies**: T001
+  **Validation**: All routes render without errors
 
 ---
 
-## Phase 3.2: Data Layer & Validation (12 tasks)
+## Phase 3.2: Data Layer & Validation (12 tasks) ✅
 
-### T009 [P] Define shared entity types
+### T009 [X] [P] Define shared entity types
+
 **Path**: `lib/types/entities.ts`
 **Description**: TypeScript interfaces for all 12 entities from data-model.md
 **Actions**:
+
 - Define types: Member, Expense, ExpenseParticipant, Balance, GroceryItem, Chore, ChoreAssignment, GymSession, FitnessGoal, Note, Reminder, ChatMessage, Settings
 - Include validation rules as JSDoc comments
-**Dependencies**: None
-**Validation**: TypeScript compilation succeeds
+  **Dependencies**: None
+  **Validation**: TypeScript compilation succeeds
 
 ---
 
-### T010 [P] Create Zod schemas - Shared entities
+### T010 [X] [P] Create Zod schemas - Shared entities
+
 **Path**: `src/server/validators/shared.schema.ts`
 **Description**: Zod schemas for Member, Note, Reminder, ChatMessage, Settings
 **Actions**:
+
 - Define schemas with all validation rules from data-model.md
 - Export type inference helpers
-**Dependencies**: T009
-**Validation**: Schema validation unit tests pass (T011)
+  **Dependencies**: T009
+  **Validation**: Schema validation unit tests pass (T011)
 
 ---
 
-### T011 [P] Unit tests for shared schemas
+### T011 [X] [P] Unit tests for shared schemas
+
 **Path**: `__tests__/unit/validators/shared.schema.test.ts`
 **Description**: Contract tests for shared Zod schemas
 **Actions**:
+
 - Test valid inputs pass
 - Test invalid inputs fail with correct error messages
 - Test edge cases (max lengths, boundary values)
-**Dependencies**: T010
-**Expected**: All tests fail (TDD - schemas not yet implemented)
+  **Dependencies**: T010
+  **Expected**: All tests fail (TDD - schemas not yet implemented)
 
 ---
 
-### T012 [P] Create Zod schemas - Expense
+### T012 [X] [P] Create Zod schemas - Expense
+
 **Path**: `src/server/validators/expense.schema.ts`
 **Description**: Zod schemas for Expense and ExpenseParticipant
 **Actions**:
+
 - Define createExpenseSchema, updateExpenseSchema
 - Include split mode validation logic
 - Participant sum validation
-**Dependencies**: T009
-**Validation**: Schema validation unit tests pass (T013)
+  **Dependencies**: T009
+  **Validation**: Schema validation unit tests pass (T013)
 
 ---
 
-### T013 [P] Unit tests for expense schemas
+### T013 [X] [P] Unit tests for expense schemas
+
 **Path**: `__tests__/unit/validators/expense.schema.test.ts`
 **Description**: Contract tests for expense Zod schemas
 **Actions**:
+
 - Test equal split validation
 - Test ratio split validation
 - Test custom split validation
 - Test participant sum mismatch errors
-**Dependencies**: T012
-**Expected**: All tests fail initially (TDD)
+  **Dependencies**: T012
+  **Expected**: All tests fail initially (TDD)
 
 ---
 
-### T014 [P] Create Zod schemas - Grocery
+### T014 [X] [P] Create Zod schemas - Grocery
+
 **Path**: `src/server/validators/grocery.schema.ts`
 **Description**: Zod schemas for GroceryItem
 **Actions**:
+
 - Define addGrocerySchema, updateGrocerySchema
 - Include duplicate detection fields
-**Dependencies**: T009
-**Validation**: Schema validation unit tests pass (T015)
+  **Dependencies**: T009
+  **Validation**: Schema validation unit tests pass (T015)
 
 ---
 
-### T015 [P] Unit tests for grocery schemas
+### T015 [X] [P] Unit tests for grocery schemas
+
 **Path**: `__tests__/unit/validators/grocery.schema.test.ts`
 **Description**: Contract tests for grocery Zod schemas
 **Dependencies**: T014
@@ -195,18 +226,21 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T016 [P] Create Zod schemas - Chore
+### T016 [X] [P] Create Zod schemas - Chore
+
 **Path**: `src/server/validators/chore.schema.ts`
 **Description**: Zod schemas for Chore and ChoreAssignment
 **Actions**:
+
 - Define createChoreSchema, updateChoreSchema, createAssignmentSchema
 - Rotation sequence validation
-**Dependencies**: T009
-**Validation**: Schema validation unit tests pass (T017)
+  **Dependencies**: T009
+  **Validation**: Schema validation unit tests pass (T017)
 
 ---
 
-### T017 [P] Unit tests for chore schemas
+### T017 [X] [P] Unit tests for chore schemas
+
 **Path**: `__tests__/unit/validators/chore.schema.test.ts`
 **Description**: Contract tests for chore Zod schemas
 **Dependencies**: T016
@@ -214,18 +248,21 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T018 [P] Create Zod schemas - Gym
+### T018 [X] [P] Create Zod schemas - Gym
+
 **Path**: `src/server/validators/gym.schema.ts`
 **Description**: Zod schemas for GymSession and FitnessGoal
 **Actions**:
+
 - Define logSessionSchema, createGoalSchema
 - Duration and date validation
-**Dependencies**: T009
-**Validation**: Schema validation unit tests pass (T019)
+  **Dependencies**: T009
+  **Validation**: Schema validation unit tests pass (T019)
 
 ---
 
-### T019 [P] Unit tests for gym schemas
+### T019 [X] [P] Unit tests for gym schemas
+
 **Path**: `__tests__/unit/validators/gym.schema.test.ts`
 **Description**: Contract tests for gym Zod schemas
 **Dependencies**: T018
@@ -233,210 +270,243 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T020 [P] Implement storage adapter interface
+### T020 [X] [P] Implement storage adapter interface
+
 **Path**: `lib/storage/adapter.ts`
 **Description**: Define StorageAdapter interface with async methods
 **Actions**:
+
 - Define interface: get, set, remove, clear
 - Add generic type support
 - Document contract
-**Dependencies**: None
-**Validation**: TypeScript compilation succeeds
+  **Dependencies**: None
+  **Validation**: TypeScript compilation succeeds
 
 ---
 
-## Phase 3.3: Core Utilities (8 tasks)
+## Phase 3.3: Core Utilities (8 tasks) ✅
 
-### T021 [P] Unit tests for balance engine
+### T021 [X] [P] Unit tests for balance engine
+
 **Path**: `__tests__/unit/utils/balance-engine.test.ts`
 **Description**: Tests for debt simplification algorithm
 **Actions**:
+
 - Test 2-member scenario (simple debt)
 - Test 3-member triangle scenario
 - Test debt netting and minimization
 - Test rounding edge cases
-**Dependencies**: None
-**Expected**: All tests fail (TDD)
+  **Dependencies**: None
+  **Expected**: All tests fail (TDD)
 
 ---
 
-### T022 Implement balance engine
+### T022 [X] Implement balance engine
+
 **Path**: `lib/utils/balance-engine.ts`
 **Description**: Debt simplification algorithm from research.md
 **Actions**:
+
 - Calculate net balance per member
 - Separate creditors and debtors
 - Greedy matching algorithm
 - Round to 2 decimals
-**Dependencies**: T021
-**Validation**: T021 tests pass
+  **Dependencies**: T021
+  **Validation**: T021 tests pass
 
 ---
 
-### T023 [P] Unit tests for chore rotation
+### T023 [X] [P] Unit tests for chore rotation
+
 **Path**: `__tests__/unit/utils/chore-rotation.test.ts`
 **Description**: Tests for round-robin rotation logic
 **Actions**:
+
 - Test sequential assignment
 - Test wrap-around at end of list
 - Test manual override
 - Test skip member scenario
-**Dependencies**: None
-**Expected**: All tests fail (TDD)
+  **Dependencies**: None
+  **Expected**: All tests fail (TDD)
 
 ---
 
-### T024 Implement chore rotation logic
+### T024 [X] Implement chore rotation logic
+
 **Path**: `lib/utils/chore-rotation.ts`
 **Description**: Round-robin rotation with manual override
 **Actions**:
+
 - Sequential assignment function
 - Next assignee calculation
 - Manual override support
-**Dependencies**: T023
-**Validation**: T023 tests pass
+  **Dependencies**: T023
+  **Validation**: T023 tests pass
 
 ---
 
-### T025 [P] Unit tests for PIN crypto utilities
+### T025 [X] [P] Unit tests for PIN crypto utilities
+
 **Path**: `__tests__/unit/utils/crypto.test.ts`
 **Description**: Tests for PBKDF2 PIN hashing
 **Actions**:
+
 - Test PIN hashing with salt
 - Test verification (correct/incorrect PIN)
 - Test salt generation
-**Dependencies**: None
-**Expected**: All tests fail (TDD)
+  **Dependencies**: None
+  **Expected**: All tests fail (TDD)
 
 ---
 
-### T026 Implement PIN crypto utilities
+### T026 [X] Implement PIN crypto utilities
+
 **Path**: `lib/utils/crypto.ts`
 **Description**: Web Crypto API PIN hashing from research.md
 **Actions**:
+
 - Implement hashPin with PBKDF2 (100k iterations)
 - Implement verifyPin
 - Generate random salt
-**Dependencies**: T025
-**Validation**: T025 tests pass
+  **Dependencies**: T025
+  **Validation**: T025 tests pass
 
 ---
 
-### T027 [P] Unit tests for i18n formatters
+### T027 [X] [P] Unit tests for i18n formatters
+
 **Path**: `__tests__/unit/utils/formatters.test.ts`
 **Description**: Tests for currency and date formatting
 **Actions**:
+
 - Test currency formatting (various locales)
 - Test date/time formatting
-**Dependencies**: None
-**Expected**: All tests fail (TDD)
+  **Dependencies**: None
+  **Expected**: All tests fail (TDD)
 
 ---
 
-### T028 Implement i18n formatters
+### T028 [X] Implement i18n formatters
+
 **Path**: `lib/utils/formatters.ts`
 **Description**: Intl API formatters for currency and dates
 **Actions**:
+
 - Currency formatter using Intl.NumberFormat
 - Date formatter using Intl.DateTimeFormat
-**Dependencies**: T027
-**Validation**: T027 tests pass
+  **Dependencies**: T027
+  **Validation**: T027 tests pass
 
 ---
 
-## Phase 3.4: Storage Layer (5 tasks)
+## Phase 3.4: Storage Layer (5 tasks) ✅
 
-### T029 [P] Unit tests for LocalStorage adapter
+### T029 [X] [P] Unit tests for LocalStorage adapter
+
 **Path**: `__tests__/unit/storage/local-storage.adapter.test.ts`
 **Description**: Tests for LocalStorage adapter implementation
 **Actions**:
+
 - Test get/set operations
 - Test remove and clear
 - Test JSON serialization/deserialization
 - Mock localStorage in tests
-**Dependencies**: T020
-**Expected**: All tests fail (TDD)
+  **Dependencies**: T020
+  **Expected**: All tests fail (TDD)
 
 ---
 
-### T030 Implement LocalStorage adapter
+### T030 [X] Implement LocalStorage adapter
+
 **Path**: `lib/storage/local-storage.adapter.ts`
 **Description**: LocalStorage implementation of StorageAdapter
 **Actions**:
+
 - Implement async wrappers for localStorage
 - JSON serialization with error handling
 - Implement all interface methods
-**Dependencies**: T020, T029
-**Validation**: T029 tests pass
+  **Dependencies**: T020, T029
+  **Validation**: T029 tests pass
 
 ---
 
-### T031 [P] Unit tests for migration service
+### T031 [X] [P] Unit tests for migration service
+
 **Path**: `__tests__/unit/services/migration.service.test.ts`
 **Description**: Tests for schema migration runner
 **Actions**:
+
 - Test version detection
 - Test sequential migration application
 - Test rollback on failure
-**Dependencies**: None
-**Expected**: All tests fail (TDD)
+  **Dependencies**: None
+  **Expected**: All tests fail (TDD)
 
 ---
 
-### T032 Implement migration service
+### T032 [X] Implement migration service
+
 **Path**: `src/server/services/migration.service.ts`
 **Description**: Schema versioning with migration runner
 **Actions**:
+
 - Version comparison logic
 - Migration chain execution
 - Initial schema (v1.0.0)
-**Dependencies**: T030, T031
-**Validation**: T031 tests pass
+  **Dependencies**: T030, T031
+  **Validation**: T031 tests pass
 
 ---
 
-### T033 [P] Create storage initialization script
+### T033 [X] [P] Create storage initialization script
+
 **Path**: `lib/storage/init.ts`
 **Description**: Initialize LocalStorage with default data
 **Actions**:
+
 - Setup default Settings singleton
 - Create initial schema version
 - Export initialization function
-**Dependencies**: T030, T032
-**Validation**: First-run setup works
+  **Dependencies**: T030, T032
+  **Validation**: First-run setup works
 
 ---
 
-## Phase 3.5: Expense Server Actions (10 tasks)
+## Phase 3.5: Expense Server Actions (10 tasks) ✅
 
-### T034 [P] Contract test: createExpense
+### T034 [X] [P] Contract test: createExpense
+
 **Path**: `__tests__/contract/expenses/create-expense.test.ts`
 **Description**: Contract test for createExpense Server Action
 **Actions**:
+
 - Test input schema validation (all split modes)
 - Test output schema validation
 - Test cache invalidation calls
 - Test error cases from contract
-**Dependencies**: T012
-**Expected**: All tests fail (TDD)
+  **Dependencies**: T012
+  **Expected**: All tests fail (TDD)
 
 ---
 
-### T035 Implement createExpense action
+### T035 [X] Implement createExpense action
+
 **Path**: `src/server/actions/expenses.ts`
 **Description**: Create expense with split logic and balance update
 **Actions**:
+
 - Validate input with Zod schema
 - Calculate participant splits based on mode
 - Save via storage adapter
 - Trigger balance recalculation
 - Invalidate cache paths
-**Dependencies**: T022, T030, T034
-**Validation**: T034 tests pass
+  **Dependencies**: T022, T030, T034
+  **Validation**: T034 tests pass
 
 ---
 
-### T036 [P] Contract test: updateExpense
+### T036 [X] [P] Contract test: updateExpense
+
 **Path**: `__tests__/contract/expenses/update-expense.test.ts`
 **Description**: Contract test for updateExpense Server Action
 **Dependencies**: T012
@@ -444,7 +514,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T037 Implement updateExpense action
+### T037 [X] Implement updateExpense action
+
 **Path**: `src/server/actions/expenses.ts`
 **Description**: Update unsettled expense (creator only)
 **Dependencies**: T035, T036
@@ -452,7 +523,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T038 [P] Contract test: deleteExpense
+### T038 [X] [P] Contract test: deleteExpense
+
 **Path**: `__tests__/contract/expenses/delete-expense.test.ts`
 **Description**: Contract test for deleteExpense Server Action
 **Dependencies**: T012
@@ -460,7 +532,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T039 Implement deleteExpense action
+### T039 [X] Implement deleteExpense action
+
 **Path**: `src/server/actions/expenses.ts`
 **Description**: Delete expense with authorization check
 **Dependencies**: T035, T038
@@ -468,7 +541,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T040 [P] Contract test: settleExpense
+### T040 [X] [P] Contract test: settleExpense
+
 **Path**: `__tests__/contract/expenses/settle-expense.test.ts`
 **Description**: Contract test for settleExpense Server Action
 **Dependencies**: T012
@@ -476,7 +550,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T041 Implement settleExpense action
+### T041 [X] Implement settleExpense action
+
 **Path**: `src/server/actions/expenses.ts`
 **Description**: Mark expense as settled with offsetting transaction
 **Dependencies**: T035, T040
@@ -484,7 +559,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T042 [P] Contract test: recalculateBalances
+### T042 [X] [P] Contract test: recalculateBalances
+
 **Path**: `__tests__/contract/expenses/recalculate-balances.test.ts`
 **Description**: Contract test for recalculateBalances Server Action
 **Dependencies**: T012
@@ -492,23 +568,26 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T043 Implement recalculateBalances action
+### T043 [X] Implement recalculateBalances action
+
 **Path**: `src/server/actions/expenses.ts`
 **Description**: Recalculate all balances from scratch
 **Actions**:
+
 - Fetch all unsettled expenses
 - Run balance engine
 - Update balance cache
-**Dependencies**: T022, T035, T042
-**Validation**: T042 tests pass
+  **Dependencies**: T022, T035, T042
+  **Validation**: T042 tests pass
 
 ---
 
-## Phase 3.6: Other Server Actions (24 tasks in 6 modules)
+## Phase 3.6: Other Server Actions (24 tasks in 6 modules) ✅
 
 ### Groceries Module (4 tasks)
 
-### T044 [P] Contract tests: Grocery actions
+### T044 [X] [P] Contract tests: Grocery actions
+
 **Path**: `__tests__/contract/groceries/*.test.ts`
 **Description**: Tests for addGrocery, updateGrocery, removeGrocery, getContributions
 **Dependencies**: T014
@@ -516,20 +595,23 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T045 Implement grocery Server Actions
+### T045 [X] Implement grocery Server Actions
+
 **Path**: `src/server/actions/groceries.ts`
 **Description**: All 4 grocery actions from contracts/README.md
 **Actions**:
+
 - addGrocery with duplicate detection
 - updateGrocery (creator only)
 - removeGrocery
 - getContributions (aggregate by member/category)
-**Dependencies**: T030, T044
-**Validation**: T044 tests pass
+  **Dependencies**: T030, T044
+  **Validation**: T044 tests pass
 
 ---
 
-### T046 [P] Contract tests: Duplicate detection
+### T046 [X] [P] Contract tests: Duplicate detection
+
 **Path**: `__tests__/contract/groceries/duplicate-detection.test.ts`
 **Description**: Tests for flagDuplicate and mergeDuplicates
 **Dependencies**: T014
@@ -537,7 +619,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T047 Implement duplicate detection actions
+### T047 [X] Implement duplicate detection actions
+
 **Path**: `src/server/actions/groceries.ts`
 **Description**: Levenshtein distance similarity detection and merge logic
 **Dependencies**: T045, T046
@@ -547,7 +630,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ### Chores Module (6 tasks)
 
-### T048 [P] Contract tests: Chore CRUD actions
+### T048 [X] [P] Contract tests: Chore CRUD actions
+
 **Path**: `__tests__/contract/chores/chore-crud.test.ts`
 **Description**: Tests for createChore, updateChore, deleteChore
 **Dependencies**: T016
@@ -555,7 +639,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T049 Implement chore CRUD actions
+### T049 [X] Implement chore CRUD actions
+
 **Path**: `src/server/actions/chores.ts`
 **Description**: Basic chore management actions
 **Dependencies**: T030, T048
@@ -563,7 +648,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T050 [P] Contract tests: Chore assignment actions
+### T050 [X] [P] Contract tests: Chore assignment actions
+
 **Path**: `__tests__/contract/chores/assignments.test.ts`
 **Description**: Tests for createChoreAssignment, markChoreComplete, rotateChore
 **Dependencies**: T016
@@ -571,18 +657,21 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T051 Implement chore assignment actions
+### T051 [X] Implement chore assignment actions
+
 **Path**: `src/server/actions/chores.ts`
 **Description**: Assignment creation, completion, and rotation
 **Actions**:
+
 - Use chore-rotation.ts utility for rotation logic
 - Update currentIndex on completion
-**Dependencies**: T024, T049, T050
-**Validation**: T050 tests pass
+  **Dependencies**: T024, T049, T050
+  **Validation**: T050 tests pass
 
 ---
 
-### T052 [P] Contract tests: Chore override
+### T052 [X] [P] Contract tests: Chore override
+
 **Path**: `__tests__/contract/chores/override.test.ts`
 **Description**: Tests for overrideAssignment action
 **Dependencies**: T016
@@ -590,7 +679,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T053 Implement chore override action
+### T053 [X] Implement chore override action
+
 **Path**: `src/server/actions/chores.ts`
 **Description**: Manual assignment override without affecting rotation sequence
 **Dependencies**: T051, T052
@@ -600,7 +690,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ### Gym Module (4 tasks)
 
-### T054 [P] Contract tests: Gym session actions
+### T054 [X] [P] Contract tests: Gym session actions
+
 **Path**: `__tests__/contract/gym/sessions.test.ts`
 **Description**: Tests for logGymSession, updateGymSession, deleteGymSession
 **Dependencies**: T018
@@ -608,7 +699,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T055 Implement gym session actions
+### T055 [X] Implement gym session actions
+
 **Path**: `src/server/actions/gym.ts`
 **Description**: Gym session CRUD actions
 **Dependencies**: T030, T054
@@ -616,7 +708,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T056 [P] Contract tests: Fitness goal actions
+### T056 [X] [P] Contract tests: Fitness goal actions
+
 **Path**: `__tests__/contract/gym/goals.test.ts`
 **Description**: Tests for createFitnessGoal, updateFitnessGoal, getGoalProgress
 **Dependencies**: T018
@@ -624,20 +717,23 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T057 Implement fitness goal actions
+### T057 [X] Implement fitness goal actions
+
 **Path**: `src/server/actions/gym.ts`
 **Description**: Goal management and progress calculation
 **Actions**:
+
 - Create/update goals
 - Calculate progress from sessions within date range
-**Dependencies**: T055, T056
-**Validation**: T056 tests pass
+  **Dependencies**: T055, T056
+  **Validation**: T056 tests pass
 
 ---
 
 ### Notes Module (4 tasks)
 
-### T058 [P] Contract tests: Note actions
+### T058 [X] [P] Contract tests: Note actions
+
 **Path**: `__tests__/contract/notes/notes.test.ts`
 **Description**: Tests for createNote, updateNote, deleteNote, archiveNote
 **Dependencies**: T010
@@ -645,7 +741,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T059 Implement note actions
+### T059 [X] Implement note actions
+
 **Path**: `src/server/actions/notes.ts`
 **Description**: Note CRUD with creator-only edit
 **Dependencies**: T030, T058
@@ -653,7 +750,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T060 [P] Contract tests: Reminder actions
+### T060 [X] [P] Contract tests: Reminder actions
+
 **Path**: `__tests__/contract/notes/reminders.test.ts`
 **Description**: Tests for createReminder, updateReminder, dismissReminder
 **Dependencies**: T010
@@ -661,7 +759,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T061 Implement reminder actions
+### T061 [X] Implement reminder actions
+
 **Path**: `src/server/actions/notes.ts`
 **Description**: Reminder CRUD and notification logic
 **Dependencies**: T059, T060
@@ -671,7 +770,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ### Chat Module (2 tasks)
 
-### T062 [P] Contract tests: Chat actions
+### T062 [X] [P] Contract tests: Chat actions
+
 **Path**: `__tests__/contract/chat/messages.test.ts`
 **Description**: Tests for sendMessage, editMessage, deleteMessage, getMessages
 **Dependencies**: T010
@@ -679,20 +779,23 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T063 Implement chat actions
+### T063 [X] Implement chat actions
+
 **Path**: `src/server/actions/chat.ts`
 **Description**: Chat board message CRUD with time-limited edits
 **Actions**:
+
 - 5-minute edit window enforcement
 - Soft delete with placeholder
-**Dependencies**: T030, T062
-**Validation**: T062 tests pass
+  **Dependencies**: T030, T062
+  **Validation**: T062 tests pass
 
 ---
 
 ### Auth Module (4 tasks)
 
-### T064 [P] Contract tests: Auth actions
+### T064 [X] [P] Contract tests: Auth actions
+
 **Path**: `__tests__/contract/auth/pin.test.ts`
 **Description**: Tests for setupPin, verifyPin, changePin, lockApp
 **Dependencies**: T010, T026
@@ -700,15 +803,17 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T065 Implement auth actions
+### T065 [X] Implement auth actions
+
 **Path**: `src/server/actions/auth.ts`
 **Description**: PIN management with rate limiting
 **Actions**:
+
 - Use crypto.ts utilities for hashing
 - Implement progressive delay on failed attempts
 - Lockout after 5 attempts
-**Dependencies**: T026, T030, T064
-**Validation**: T064 tests pass
+  **Dependencies**: T026, T030, T064
+  **Validation**: T064 tests pass
 
 ---
 
@@ -716,21 +821,24 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-## Phase 3.7: UI Components (15 tasks)
+## Phase 3.7: UI Components (15 tasks) ✅
 
-### T066 [P] Shared components: Navigation
+### T066 [X] [P] Shared components: Navigation
+
 **Path**: `components/shared/nav.tsx`
 **Description**: Main navigation with mobile menu
 **Actions**:
+
 - Bottom nav for mobile (5 main routes)
 - Sidebar for desktop
 - Active route highlighting
-**Dependencies**: T003
-**Validation**: Renders correctly on all breakpoints
+  **Dependencies**: T003
+  **Validation**: Renders correctly on all breakpoints
 
 ---
 
-### T067 [P] Shared components: Error boundaries
+### T067 [X] [P] Shared components: Error boundaries
+
 **Path**: `components/shared/error-boundary.tsx`
 **Description**: Reusable error boundary with retry
 **Dependencies**: T003
@@ -738,7 +846,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T068 [P] Shared components: Skeleton loaders
+### T068 [X] [P] Shared components: Skeleton loaders
+
 **Path**: `components/shared/skeleton-loader.tsx`
 **Description**: Loading skeletons for lists and cards
 **Dependencies**: T003
@@ -746,44 +855,51 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T069 [P] Expense components: ExpenseList (Server Component)
+### T069 [X] [P] Expense components: ExpenseList (Server Component)
+
 **Path**: `components/expenses/expense-list.tsx`
 **Description**: Server Component for expense list with filters
 **Actions**:
+
 - Fetch expenses via Server Action
 - Support filtering by category, date, member
 - Pagination/virtualization if >100 items
-**Dependencies**: T035, T003
-**Validation**: Renders with mock data
+  **Dependencies**: T035, T003
+  **Validation**: Renders with mock data
 
 ---
 
-### T070 [P] Expense components: ExpenseForm (Client Component)
+### T070 [X] [P] Expense components: ExpenseForm (Client Component)
+
 **Path**: `components/expenses/expense-form.tsx`
 **Description**: Client Component for expense create/edit form
 **Actions**:
+
 - Use React Hook Form + Zod validation
 - Split mode selector (equal/ratio/custom)
 - Participant selection with amount calculation
 - Optimistic UI updates
-**Dependencies**: T035, T003, T012
-**Validation**: Form validation works, submission triggers Server Action
+  **Dependencies**: T035, T003, T012
+  **Validation**: Form validation works, submission triggers Server Action
 
 ---
 
-### T071 [P] Expense components: BalanceDashboard
+### T071 [X] [P] Expense components: BalanceDashboard
+
 **Path**: `components/expenses/balance-dashboard.tsx`
 **Description**: Server Component showing current balances
 **Actions**:
+
 - Fetch balances from Server Action
 - Visual balance cards (who owes whom)
 - "Settle" button for each balance
-**Dependencies**: T043, T003
-**Validation**: Balances displayed correctly
+  **Dependencies**: T043, T003
+  **Validation**: Balances displayed correctly
 
 ---
 
-### T072 [P] Grocery components
+### T072 [X] [P] Grocery components
+
 **Path**: `components/groceries/grocery-list.tsx`, `grocery-form.tsx`
 **Description**: Grocery list (Server) and form (Client)
 **Dependencies**: T045, T003
@@ -791,19 +907,22 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T073 [P] Chore components
+### T073 [X] [P] Chore components
+
 **Path**: `components/chores/chore-list.tsx`, `chore-card.tsx`
 **Description**: Chore list and individual chore cards
 **Actions**:
+
 - Show current assignment
 - "Complete" button
 - Rotation indicator
-**Dependencies**: T051, T003
-**Validation**: Mark complete triggers rotation
+  **Dependencies**: T051, T003
+  **Validation**: Mark complete triggers rotation
 
 ---
 
-### T074 [P] Gym components
+### T074 [X] [P] Gym components
+
 **Path**: `components/gym/session-list.tsx`, `session-form.tsx`, `goal-progress.tsx`
 **Description**: Gym session list, log form, and goal progress bar
 **Dependencies**: T055, T057, T003
@@ -811,7 +930,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T075 [P] Notes components
+### T075 [X] [P] Notes components
+
 **Path**: `components/notes/note-list.tsx`, `note-form.tsx`
 **Description**: Note list and create/edit form
 **Dependencies**: T059, T003
@@ -819,18 +939,21 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T076 [P] Chat components
+### T076 [X] [P] Chat components
+
 **Path**: `components/chat/message-list.tsx`, `message-input.tsx`
 **Description**: Chat message list and input form
 **Actions**:
+
 - Chronological message ordering
 - Edit/delete buttons (author only)
-**Dependencies**: T063, T003
-**Validation**: Send message appears instantly (optimistic UI)
+  **Dependencies**: T063, T003
+  **Validation**: Send message appears instantly (optimistic UI)
 
 ---
 
-### T077 [P] Settings components
+### T077 [X] [P] Settings components
+
 **Path**: `components/settings/member-manager.tsx`, `data-export.tsx`
 **Description**: Member management and data export UI
 **Dependencies**: T003
@@ -838,82 +961,95 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T078 [P] Auth components: PIN entry
+### T078 [X] [P] Auth components: PIN entry
+
 **Path**: `components/auth/pin-entry.tsx`
 **Description**: Client Component for PIN input
 **Actions**:
+
 - 4-digit PIN input with masking
 - Progressive delay on failed attempts
 - Lockout countdown display
-**Dependencies**: T065, T003
-**Validation**: Rate limiting enforced
+  **Dependencies**: T065, T003
+  **Validation**: Rate limiting enforced
 
 ---
 
-### T079 [P] Setup wizard components
+### T079 [X] [P] Setup wizard components
+
 **Path**: `components/setup/wizard.tsx`
 **Description**: Multi-step first-run setup
 **Actions**:
+
 - Step 1: Household name, currency, locale
 - Step 2: Add members
 - Step 3: Set PIN
 - Step 4: Initial categories
-**Dependencies**: T003
-**Validation**: All steps complete without errors
+  **Dependencies**: T003
+  **Validation**: All steps complete without errors
 
 ---
 
-### T080 [P] Custom hooks
+### T080 [X] [P] Custom hooks
+
 **Path**: `lib/hooks/use-local-storage.ts`, `use-optimistic-update.ts`, `use-pin-auth.ts`
 **Description**: Reusable hooks for client components
 **Actions**:
+
 - useLocalStorage for direct access
 - useOptimisticUpdate for mutations
 - usePinAuth for auth state
-**Dependencies**: T030
-**Validation**: Hooks work in test components
+  **Dependencies**: T030
+  **Validation**: Hooks work in test components
 
 ---
 
-## Phase 3.8: Routes & Pages (10 tasks)
+## Phase 3.8: Routes & Pages (10 tasks) ✅
 
-### T081 Root layout and middleware
+### T081 [X] Root layout and middleware
+
 **Path**: `app/layout.tsx`, middleware (if needed)
 **Description**: Root layout with theme provider, i18n, and auth check
 **Actions**:
+
 - Wrap with next-intl provider
 - Theme provider (light/dark toggle)
 - Font configuration (Geist Sans/Mono)
-**Dependencies**: T066
-**Validation**: All routes inherit layout
+  **Dependencies**: T066
+  **Validation**: All routes inherit layout
 
 ---
 
-### T082 Dashboard page
+### T082 [X] Dashboard page
+
 **Path**: `app/(dashboard)/page.tsx`
 **Description**: Main dashboard with balances and recent activity
 **Actions**:
+
 - Server Component fetching balances
 - Recent expense list (last 10)
 - Quick action buttons
-**Dependencies**: T071, T069
-**Validation**: Shows current balances
+  **Dependencies**: T071, T069
+  **Validation**: Shows current balances
 
 ---
 
-### T083 Expense routes
+### T083 [X] Expense routes
+
 **Path**: `app/expenses/page.tsx`, `new/page.tsx`, `[id]/page.tsx`
 **Description**: Expense list, create, and detail pages
 **Actions**:
+
 - List page with filters (Server Component)
 - Create page with form (Client Component in form)
 - Detail page with edit/delete
-**Dependencies**: T069, T070
-**Validation**: Full CRUD works
+  **Dependencies**: T069, T070
+  **Validation**: Full CRUD works
 
 ---
 
-### T084 [P] Grocery route
+### T084 [X] [P] Grocery route
+
 **Path**: `app/groceries/page.tsx`
 **Description**: Grocery list page
 **Dependencies**: T072
@@ -921,7 +1057,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T085 [P] Chore route
+### T085 [X] [P] Chore route
+
 **Path**: `app/chores/page.tsx`
 **Description**: Chore assignment page
 **Dependencies**: T073
@@ -929,7 +1066,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T086 [P] Gym route
+### T086 [X] [P] Gym route
+
 **Path**: `app/gym/page.tsx`
 **Description**: Gym sessions and goals page
 **Dependencies**: T074
@@ -937,7 +1075,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T087 [P] Notes route
+### T087 [X] [P] Notes route
+
 **Path**: `app/notes/page.tsx`
 **Description**: Shared notes and reminders page
 **Dependencies**: T075
@@ -945,7 +1084,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T088 [P] Chat route
+### T088 [X] [P] Chat route
+
 **Path**: `app/chat/page.tsx`
 **Description**: Chat board page
 **Dependencies**: T076
@@ -953,7 +1093,8 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T089 Settings routes
+### T089 [X] Settings routes
+
 **Path**: `app/settings/page.tsx`, `members/page.tsx`, `data/page.tsx`
 **Description**: Settings, member management, and data export pages
 **Dependencies**: T077
@@ -961,79 +1102,94 @@ npx shadcn-ui@latest add button card dialog form input label select
 
 ---
 
-### T090 Auth and setup routes
+### T090 [X] Auth and setup routes
+
 **Path**: `app/auth/page.tsx`, `auth/setup/page.tsx`, `app/setup/page.tsx`
 **Description**: PIN entry gate, PIN setup, and first-run wizard
 **Actions**:
+
 - Auth gate redirects if not authenticated
 - Setup wizard only on first run
-**Dependencies**: T078, T079
-**Validation**: PIN lock/unlock works
+  **Dependencies**: T078, T079
+  **Validation**: PIN lock/unlock works
 
 ---
 
-## Phase 3.9: PWA & Integration (5 tasks)
+## Phase 3.9: PWA & Integration (5 tasks) ✅
 
-### T091 Configure PWA
+### T091 [X] Configure PWA
+
 **Path**: `next.config.ts`, `public/manifest.json`, service worker
 **Description**: Setup next-pwa with Workbox
 **Actions**:
+
 ```javascript
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-})
-module.exports = withPWA({ /* next config */ })
+const withPWA = require("next-pwa")({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+});
+module.exports = withPWA({
+  /* next config */
+});
 ```
+
 - Create manifest.json with icons
 - Configure caching strategies
-**Dependencies**: T001
-**Validation**: Service worker registers, offline mode works
+  **Dependencies**: T001
+  **Validation**: Service worker registers, offline mode works
 
 ---
 
-### T092 [P] Integration test: Expense flow
+### T092 [X] [P] Integration test: Expense flow
+
 **Path**: `__tests__/integration/expense-flow.test.ts`
 **Description**: Full expense flow (create → update → settle)
 **Actions**:
+
 - Create expense
 - Verify balance update
 - Update expense
 - Settle expense
 - Verify balance cleared
-**Dependencies**: T035-T043
-**Validation**: Test passes
+  **Dependencies**: T035-T043
+  **Validation**: Test passes
 
 ---
 
-### T093 [P] Integration test: Chore rotation
+### T093 [X] [P] Integration test: Chore rotation
+
 **Path**: `__tests__/integration/chore-rotation.test.ts`
 **Description**: Chore rotation over multiple cycles
 **Actions**:
+
 - Create chore with 3-member rotation
 - Complete 10 assignments
 - Verify rotation sequence correct
-**Dependencies**: T049-T053
-**Validation**: Test passes
+  **Dependencies**: T049-T053
+  **Validation**: Test passes
 
 ---
 
-### T094 [P] Integration test: Balance accuracy
+### T094 [X] [P] Integration test: Balance accuracy
+
 **Path**: `__tests__/integration/balance-engine.test.ts`
 **Description**: Multi-member balance calculation
 **Actions**:
+
 - Create 5 expenses with different splits
 - Verify debt simplification
 - Test rounding edge cases
-**Dependencies**: T022, T035
-**Validation**: Test passes
+  **Dependencies**: T022, T035
+  **Validation**: Test passes
 
 ---
 
-### T095 [P] E2E tests: Quickstart scenarios
+### T095 [X] [P] E2E tests: Quickstart scenarios
+
 **Path**: `__tests__/e2e/*.spec.ts`
 **Description**: All 10 quickstart scenarios from quickstart.md
 **Actions**:
+
 - Scenario 1: Split bill equally
 - Scenario 2: Rotating cleaning schedule
 - Scenario 3: Shared grocery tracking
@@ -1044,8 +1200,8 @@ module.exports = withPWA({ /* next config */ })
 - Scenario 8: Settle balance
 - Scenario 9: Duplicate grocery detection
 - Scenario 10: PWA offline mode
-**Dependencies**: T081-T090, T091
-**Validation**: All scenarios pass
+  **Dependencies**: T081-T090, T091
+  **Validation**: All scenarios pass
 
 ---
 
@@ -1073,6 +1229,7 @@ T001 → T009 → T012 → T021 → T022 → T030 → T034 → T035 → T069 →
 ## Parallel Execution Examples
 
 ### Parallel Batch 1: Foundation (run together)
+
 ```bash
 # T002-T008 can all run in parallel
 Task: Install core dependencies (T002)
@@ -1084,6 +1241,7 @@ Task: Setup Playwright (T007)
 ```
 
 ### Parallel Batch 2: Zod Schemas (run together after T009)
+
 ```bash
 # T010-T019 (odd-numbered: tests, even: implementation)
 Task: Create shared schemas + tests (T010, T011)
@@ -1094,6 +1252,7 @@ Task: Create gym schemas + tests (T018, T019)
 ```
 
 ### Parallel Batch 3: Utilities (run together)
+
 ```bash
 # T021-T027 (tests in parallel)
 Task: Balance engine tests (T021)
@@ -1103,6 +1262,7 @@ Task: Formatters tests (T027)
 ```
 
 ### Parallel Batch 4: Contract Tests (run together)
+
 ```bash
 # All contract tests for Server Actions
 Task: Expense contract tests (T034, T036, T038, T040, T042)
@@ -1115,6 +1275,7 @@ Task: Auth contract tests (T064)
 ```
 
 ### Parallel Batch 5: UI Components (run together)
+
 ```bash
 # T066-T080 (all different files)
 Task: Shared components (T066, T067, T068)
@@ -1131,6 +1292,7 @@ Task: Custom hooks (T080)
 ```
 
 ### Parallel Batch 6: Routes (run together)
+
 ```bash
 # T084-T089 (independent routes)
 Task: Grocery route (T084)
@@ -1141,6 +1303,7 @@ Task: Chat route (T088)
 ```
 
 ### Parallel Batch 7: Final Tests (run together)
+
 ```bash
 # T092-T095
 Task: Expense flow integration test (T092)
@@ -1204,4 +1367,4 @@ Each task adheres to constitutional principles:
 
 ---
 
-*Generated from Constitution v1.1.0 - See `.specify/memory/constitution.md`*
+_Generated from Constitution v1.1.0 - See `.specify/memory/constitution.md`_

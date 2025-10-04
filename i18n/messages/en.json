@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "Flatmate Life Tracker",
+    "description": "Collaborative household management"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "expenses": "Expenses",
+    "groceries": "Groceries",
+    "chores": "Chores",
+    "gym": "Gym",
+    "notes": "Notes",
+    "chat": "Chat",
+    "settings": "Settings"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "An error occurred"
+  }
+}
