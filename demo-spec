@@ -1,0 +1,404 @@
+import { useState } from “react”;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+UTILITY COMPONENTS
+═══════════════════════════════════════════════════════════════════════════ */
+const fmtPct = (v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
+const fmtZAR = (v) => `R${Math.abs(v).toLocaleString("en-ZA")}`;
+
+const Badge = ({ children, variant = “default” }) => {
+const c = { positive: “bg-emerald-900/40 text-emerald-300 border-emerald-700/50”, negative: “bg-red-900/40 text-red-300 border-red-700/50”, neutral: “bg-amber-900/40 text-amber-300 border-amber-700/50”, default: “bg-slate-700/50 text-slate-300 border-slate-600/50”, info: “bg-sky-900/40 text-sky-300 border-sky-700/50”, mixed: “bg-orange-900/40 text-orange-300 border-orange-700/50” };
+return <span className={`px-2 py-0.5 rounded text-xs font-medium border ${c[variant] || c.default}`}>{children}</span>;
+};
+
+const Card = ({ title, sub, accent = “border-l-sky-500”, children }) => (
+
+  <div className={`bg-slate-800/60 backdrop-blur rounded-lg border border-slate-700/50 border-l-4 ${accent} overflow-hidden`}>
+    <div className="px-5 py-4 border-b border-slate-700/30">
+      <h3 className="text-sm font-semibold text-slate-200 tracking-wide uppercase">{title}</h3>
+      {sub && <p className="text-xs text-slate-500 mt-0.5">{sub}</p>}
+    </div>
+    <div className="p-5">{children}</div>
+  </div>
+);
+
+const CorDot = ({ v }) => {
+const color = v > 0.6 ? “bg-emerald-400” : v > 0.3 ? “bg-amber-400” : “bg-slate-500”;
+return <div className="flex items-center gap-2"><div className={`w-3 h-3 rounded-full ${color}`} style={{ opacity: 0.4 + Math.abs(v) * 0.6 }} /><span className="text-xs text-slate-400">{v.toFixed(2)}</span></div>;
+};
+
+const Waterfall = ({ items, max = 16 }) => (
+
+  <div className="space-y-2">{items.map((item, i) => {
+    let run = 0; for (let j = 0; j < i; j++) if (items[j].type !== "total") run += items[j].value;
+    const start = item.type === "total" || item.type === "base" ? 0 : run;
+    const left = (Math.max(0, start) / max) * 100;
+    const w = Math.max((Math.abs(item.value) / max) * 100, 3);
+    const bg = item.type === "total" ? "bg-sky-500" : item.type === "base" ? "bg-slate-500" : item.value >= 0 ? "bg-emerald-500" : "bg-red-500";
+    return (<div key={i} className="flex items-center gap-3"><div className="w-32 text-right text-xs text-slate-400 flex-shrink-0">{item.label}</div><div className="flex-1 relative h-7"><div className="absolute inset-0 bg-slate-700/20 rounded" /><div className={`absolute top-0.5 bottom-0.5 rounded ${bg} flex items-center justify-end pr-2`} style={{ left: `${left}%`, width: `${w}%`, minWidth: 36 }}><span className="text-xs font-semibold text-white">{fmtPct(item.value)}</span></div></div></div>);
+  })}</div>
+);
+
+const FlowMap = () => {
+const N = [{ id: “macro”, l: “Macro”, x: 50, y: 12, c: “#f59e0b” }, { id: “micro”, l: “Micro”, x: 85, y: 32, c: “#8b5cf6” }, { id: “mkt”, l: “Market”, x: 50, y: 46, c: “#3b82f6” }, { id: “port”, l: “Portfolio”, x: 18, y: 46, c: “#06b6d4” }, { id: “act”, l: “Actions”, x: 12, y: 78, c: “#ec4899” }, { id: “attr”, l: “Attribution”, x: 50, y: 78, c: “#10b981” }, { id: “narr”, l: “Narrative”, x: 82, y: 78, c: “#f97316” }];
+const E = [[“macro”,“mkt”,“drives”], [“micro”,“mkt”,“events”], [“mkt”,“port”,“returns”], [“act”,“port”,“flows”], [“port”,“attr”,“decompose”], [“mkt”,“attr”,“bench”], [“macro”,“attr”,“factors”], [“act”,“attr”,“timing”], [“attr”,“narr”,“synthesise”], [“micro”,“narr”,“context”]];
+return (<svg viewBox="0 0 100 95" className="w-full h-56"><defs><marker id="a" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#475569"/></marker></defs>{E.map(([f,t,l],i) => { const a=N.find(n=>n.id===f), b=N.find(n=>n.id===t); return <g key={i}><line x1={a.x} y1={a.y+3} x2={b.x} y2={b.y-3} stroke="#475569" strokeWidth=".3" markerEnd="url(#a)"/><text x={(a.x+b.x)/2} y={(a.y+b.y)/2-1} textAnchor="middle" fontSize="2" fill="#64748b">{l}</text></g>; })}{N.map(n => <g key={n.id}><circle cx={n.x} cy={n.y} r="5" fill={n.c} opacity=".15"/><circle cx={n.x} cy={n.y} r="3" fill={n.c} opacity=".55"/><text x={n.x} y={n.y+9} textAnchor="middle" fontSize="2.8" fill={n.c} fontWeight="600">{n.l}</text></g>)}</svg>);
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+PORTFOLIO SAMPLE DATA
+═══════════════════════════════════════════════════════════════════════════ */
+const P = { name: “Balanced Growth Fund”, inv: “Thabo Mokoena”, period: “1 Jan – 31 Dec 2025” };
+const pH = [
+{ n: “SA Equities”, w: 38.2, r: 14.1, bw: 40, br: 12.3 }, { n: “SA Bonds”, w: 18.5, r: 9.8, bw: 20, br: 8.9 },
+{ n: “Offshore Equity”, w: 22.0, r: 21.4, bw: 18, br: 19.2 }, { n: “SA Property”, w: 8.3, r: -2.1, bw: 7, br: -1.5 },
+{ n: “SA Cash”, w: 5.0, r: 7.9, bw: 8, br: 7.8 }, { n: “Offshore Bonds”, w: 5.5, r: 11.6, bw: 5, br: 10.1 },
+{ n: “Alternatives”, w: 2.5, r: 8.4, bw: 2, br: 7.0 },
+];
+const pM = [
+{ f: “SA Repo Rate”, v: “7.50%”, ch: “-75bps”, im: “positive”, d: “SARB cut 3 times” },
+{ f: “SA CPI”, v: “4.2%”, ch: “-1.1%”, im: “positive”, d: “Within target band” },
+{ f: “ZAR/USD”, v: “18.92”, ch: “-8.3%”, im: “positive”, d: “Rand weakness boosted offshore” },
+{ f: “Gold (USD)”, v: “$2,410”, ch: “+18.2%”, im: “positive”, d: “Supported SA miners” },
+{ f: “US Fed Rate”, v: “4.25%”, ch: “-100bps”, im: “positive”, d: “Easing supported risk assets” },
+];
+const pA = [
+{ dt: “2025-02-10”, ty: “Contribution”, amt: 500000, ti: “+R31,000” },
+{ dt: “2025-07-15”, ty: “Withdrawal”, amt: -200000, ti: “-R18,600” },
+{ dt: “2025-09-01”, ty: “Switch”, amt: 0, ti: “+R8,400” },
+];
+const pAt = { alloc: 0.8, sel: 1.4, inter: 0.3, ccy: 1.9, cf: 0.6, port: 14.2, bench: 9.2 };
+const pN = [
+“Your portfolio delivered 14.2% over 2025, beating the benchmark’s 9.2%. That’s roughly R237,000 of extra value.”,
+“The biggest driver was currency: rand weakness of 8.3% turbocharged your 22% offshore allocation, contributing ~1.9% of outperformance.”,
+“Within SA equities, stock selection added 1.4% — Naspers restructure and FirstRand earnings beat led the way.”,
+“Your February R500k contribution landed before a 6.2% rally (+R31k). The July withdrawal during a dip cost ~R18.6k. Net timing: +0.6%.”,
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ALLAN GRAY-ORBIS FUND DATA
+═══════════════════════════════════════════════════════════════════════════ */
+const AG = { name: “Allan Gray-Orbis Global Equity Feeder Fund”, asisa: “Global – Equity – General”, bench: “MSCI World Index (incl. income, after WHT)”, size: “R35.6bn”, ter: “2.04%”, charge: “2.15%”, pe: 18, peBench: 28, period: “1 Jan – 31 Dec 2025” };
+
+const agH = [
+{ n: “QXO Inc”, w: 6.1, s: “Industrials”, r: 42.3, d: “Brad Jacobs’ building products rollup — massive re-rating” },
+{ n: “Corpay Inc”, w: 5.5, s: “Financials”, r: 28.7, d: “Corporate payments platform — steady compounder” },
+{ n: “Elevance Health”, w: 5.0, s: “Healthcare”, r: -8.4, d: “Managed care under political pressure — Orbis added on weakness” },
+{ n: “Nintendo Co”, w: 4.2, s: “Comm. Svc”, r: 31.5, d: “Switch 2 announcement catalysed IP re-rating” },
+{ n: “Next PLC”, w: 3.8, s: “Consumer”, r: 24.1, d: “Lord Wolfson’s operational excellence in UK retail” },
+{ n: “Genmab A/S”, w: 3.5, s: “Healthcare”, r: -14.2, d: “Biotech sentiment downturn — key detractor” },
+{ n: “Samsung Elec.”, w: 3.3, s: “Technology”, r: -6.8, d: “Memory cycle trough — lagged AI peers” },
+{ n: “Itaú Unibanco”, w: 3.0, s: “Financials”, r: 19.4, d: “Brazilian banking champion — LatAm rate normalisation” },
+{ n: “Alphabet Inc”, w: 2.8, s: “Technology”, r: 36.2, d: “Re-established position — search + AI/cloud undervalued” },
+{ n: “PayPal”, w: 2.5, s: “Technology”, r: 22.8, d: “Turnaround under new CEO — margin recovery” },
+];
+
+const agSec = [
+{ n: “Industrials”, fw: 20.7, bw: 12.5, fr: 26.3, br: 18.4 }, { n: “Technology”, fw: 19.9, bw: 22.2, fr: 18.1, br: 31.2 },
+{ n: “Financial Svc”, fw: 17.1, bw: 15.6, fr: 22.5, br: 19.8 }, { n: “Healthcare”, fw: 11.6, bw: 11.5, fr: -2.8, br: 4.1 },
+{ n: “Comm. Svc”, fw: 7.6, bw: 7.9, fr: 27.4, br: 24.5 }, { n: “Consumer Def.”, fw: 7.0, bw: 6.6, fr: 12.3, br: 10.8 },
+{ n: “Consumer Cyc.”, fw: 4.5, bw: 9.9, fr: 15.6, br: 22.1 }, { n: “Energy”, fw: 3.9, bw: 3.3, fr: 8.2, br: 6.1 },
+];
+
+const agReg = [
+{ n: “United States”, fw: 43.2, bw: 72.8 }, { n: “Asia (Dev.)”, fw: 12.9, bw: 3.0 },
+{ n: “United Kingdom”, fw: 12.6, bw: 3.8 }, { n: “Eurozone”, fw: 10.2, bw: 8.5 },
+{ n: “Japan”, fw: 6.4, bw: 5.2 }, { n: “EM (Asia/LatAm)”, fw: 7.6, bw: 0.0 },
+{ n: “Other Dev.”, fw: 7.1, bw: 6.7 },
+];
+
+const agMacro = [
+{ f: “US Tariff Shocks”, p: “Feb–Apr”, im: “negative”, ct: “-4.8%”, d: “25% on Canada/Mexico, 145% on China, 10% universal. Markets fell >15% then recovered to new highs.” },
+{ f: “Fed Rate Cuts”, p: “H2 2025”, im: “positive”, ct: “+2.1%”, d: “100bps of cuts supported risk assets and value rotation.” },
+{ f: “Value vs Growth”, p: “Full year”, im: “mixed”, ct: “Headwind”, d: “Value preference and mid-cap tilt was a drag as US mega-cap growth led.” },
+{ f: “ZAR Depreciation”, p: “Full year”, im: “positive”, ct: “+8.3%”, d: “For SA feeder fund investors, rand weakness amplified USD returns.” },
+{ f: “AI Infra Spend”, p: “Full year”, im: “positive”, ct: “+1.4%”, d: “Orbis rotated into AI consumables — semis, power infrastructure.” },
+{ f: “Healthcare Downturn”, p: “H1 2025”, im: “negative”, ct: “-1.6%”, d: “Post-COVID biotech hangover hit Genmab, Elevance. Orbis added aggressively.” },
+];
+
+const agMicro = [
+{ ev: “QXO acquisitions”, dt: “Q1”, ty: “M&A”, im: “+2.6%”, d: “Rollup strategy validated — shares re-rated 42%” },
+{ ev: “Nintendo Switch 2”, dt: “Jan”, ty: “Product”, im: “+1.3%”, d: “Console announcement catalysed IP re-assessment” },
+{ ev: “Alphabet re-entry”, dt: “Q4”, ty: “Position”, im: “+0.5%”, d: “Orbis re-established after tariff dip” },
+{ ev: “PayPal margins”, dt: “H2”, ty: “Earnings”, im: “+0.6%”, d: “New CEO restructuring delivered margin expansion” },
+{ ev: “Next PLC share gains”, dt: “Full yr”, ty: “Earnings”, im: “+0.9%”, d: “Online platform grew 18%” },
+{ ev: “Genmab setback”, dt: “Mar”, ty: “Clinical”, im: “-0.5%”, d: “Trial disappointment — Orbis maintained conviction” },
+{ ev: “Samsung trough”, dt: “H1”, ty: “Cycle”, im: “-0.2%”, d: “DRAM pricing bottomed, underperformed AI peers” },
+{ ev: “Elevance politics”, dt: “Q2-Q3”, ty: “Regulatory”, im: “-0.4%”, d: “Managed care under policy rhetoric pressure” },
+];
+
+const agFact = [
+{ f: “Value (HML)”, cor: 0.62, b: 0.85, ct: “-1.8%”, dir: “Value tilt headwind” },
+{ f: “Size (SMB)”, cor: 0.41, b: 0.52, ct: “-0.6%”, dir: “Mid-cap drag” },
+{ f: “Momentum”, cor: -0.35, b: -0.42, ct: “-1.1%”, dir: “Contrarian fights momentum” },
+{ f: “Quality”, cor: 0.58, b: 0.71, ct: “+1.2%”, dir: “Strong management picks” },
+{ f: “USD (DXY)”, cor: 0.44, b: 0.38, ct: “+0.8%”, dir: “Dollar strength aided non-US” },
+{ f: “Rate Sensitivity”, cor: 0.51, b: 0.61, ct: “+1.4%”, dir: “Cuts aided value/financials” },
+];
+
+const agRisk = { fVol: 14.2, bVol: 12.8, fDD: -18.4, bDD: -15.2, fSh: 1.24, bSh: 1.48, te: 6.8, ir: 0.68, upCap: 92, dnCap: 85, beta: 0.89, alpha: 3.2 };
+
+const agNarr = [
+“2025 was a year of whiplash. Markets fell over 15% from mid-February to early April as tariff shocks hit — then roared to new all-time highs. The fund navigated this through contrarian conviction.”,
+“The majority of excess return came from bottom-up stock picks, not macro calls. Only about half the stocks outperformed — but winners won significantly more than losers lost. That’s the asymmetric payoff of contrarian investing.”,
+“QXO was the standout (+2.6%), validating Brad Jacobs’ rollup strategy. Nintendo’s Switch 2 catalysed an IP re-rating (+1.3%). PayPal’s turnaround delivered (+0.6%), and Next PLC continued executing brilliantly (+0.9%).”,
+“Healthcare was the biggest headwind. Genmab suffered post-COVID biotech sentiment (-0.5%), Elevance faced US political rhetoric (-0.4%). Orbis responded by adding to positions at lower prices.”,
+“At factor level, the value tilt (-1.8%) and mid-cap preference (-0.6%) dragged. But quality (+1.2%) and rate sensitivity (+1.4%) offset as central banks cut and well-managed companies were rewarded.”,
+“For SA investors, rand depreciation of 8.3% provided a significant translation boost. Active currency management added a further 0.6%.”,
+“Turnover was notably higher than usual — Orbis rotated into healthcare (now 10% of fund), AI consumables, and high-conviction detractors. Holdings trade at 18× earnings vs 28× for MSCI World.”,
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+PORTFOLIO — DEVELOPER VIEW
+═══════════════════════════════════════════════════════════════════════════ */
+const PortDev = () => (
+
+  <div className="space-y-5">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {[["Data Tables","16"],["Relationships","24"],["Interaction Chains","6"],["Output Metrics","42+"]].map(([l,v],i) => <div key={i} className="bg-slate-800/60 rounded-lg p-4 border border-slate-700/40 text-center"><div className="text-2xl font-bold text-sky-400">{v}</div><div className="text-xs text-slate-500 mt-1">{l}</div></div>)}
+    </div>
+    <Card title="Interaction & Data Flow Map" accent="border-l-amber-500"><FlowMap /></Card>
+    <Card title="Input → Holdings" accent="border-l-cyan-500">
+      <table className="w-full text-xs"><thead><tr className="text-slate-500 border-b border-slate-700/50"><th className="text-left py-2 px-2">Class</th><th className="text-right px-2">Wt</th><th className="text-right px-2">Bench</th><th className="text-right px-2">Active</th><th className="text-right px-2">Return</th><th className="text-right px-2">Excess</th></tr></thead>
+      <tbody>{pH.map((h,i) => <tr key={i} className="border-b border-slate-700/20"><td className="py-2 px-2 text-slate-300">{h.n}</td><td className="text-right px-2 text-slate-400">{h.w}%</td><td className="text-right px-2 text-slate-500">{h.bw}%</td><td className={`text-right px-2 ${h.w-h.bw>0?"text-emerald-400":"text-red-400"}`}>{fmtPct(h.w-h.bw)}</td><td className={`text-right px-2 ${h.r>=0?"text-emerald-400":"text-red-400"}`}>{fmtPct(h.r)}</td><td className={`text-right px-2 font-medium ${h.r-h.br>=0?"text-emerald-400":"text-red-400"}`}>{fmtPct(h.r-h.br)}</td></tr>)}</tbody></table>
+    </Card>
+    <Card title="Input → Macro Factors" accent="border-l-amber-500">
+      {pM.map((m,i) => <div key={i} className="flex items-center gap-3 py-2 border-b border-slate-700/20 last:border-0"><Badge variant={m.im}>{m.im}</Badge><span className="text-sm text-slate-300 flex-1">{m.f} <span className="text-slate-500">{m.v}</span> <span className={`font-mono text-xs text-emerald-400`}>{m.ch}</span></span><span className="text-xs text-slate-500 hidden sm:block">{m.d}</span></div>)}
+    </Card>
+    <Card title="Input → Investor Actions" accent="border-l-pink-500">
+      {pA.map((a,i) => <div key={i} className="flex items-center gap-3 py-2 border-b border-slate-700/20 last:border-0"><Badge variant={a.ty==="Withdrawal"?"negative":a.ty==="Switch"?"info":"positive"}>{a.ty}</Badge><span className="text-sm text-slate-300 flex-1">{a.dt} {a.amt!==0&&<span className={`font-mono ${a.amt>0?"text-emerald-400":"text-red-400"}`}>{fmtZAR(a.amt)}</span>}</span><span className={`text-xs font-mono ${a.ti.startsWith("+")?"text-emerald-400":"text-red-400"}`}>{a.ti}</span></div>)}
+    </Card>
+    <Card title="Computed → Attribution" accent="border-l-emerald-500">
+      <Waterfall items={[{label:"Benchmark",value:pAt.bench,type:"base"},{label:"Allocation",value:pAt.alloc,type:"add"},{label:"Selection",value:pAt.sel,type:"add"},{label:"Interaction",value:pAt.inter,type:"add"},{label:"Currency",value:pAt.ccy,type:"add"},{label:"Cash Flow",value:pAt.cf,type:"add"},{label:"Portfolio",value:pAt.port,type:"total"}]} />
+    </Card>
+    <Card title="Computed → Behavioural" accent="border-l-pink-500">
+      <div className="grid grid-cols-3 gap-3">
+        {[["TWR-MWR Gap","+0.6%","text-emerald-400"],["Contribution Timing","+0.8%","text-emerald-400"],["Withdrawal Cost","-0.4%","text-red-400"]].map(([l,v,c],i) => <div key={i} className="bg-slate-700/30 rounded-lg p-3"><div className={`text-lg font-bold ${c}`}>{v}</div><div className="text-xs text-slate-500 mt-1">{l}</div></div>)}
+      </div>
+    </Card>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════════════════════════════
+PORTFOLIO — INVESTOR VIEW
+═══════════════════════════════════════════════════════════════════════════ */
+const PortUser = () => {
+const [exp, setExp] = useState(null);
+const drivers = [
+{ l: “Currency tailwind”, v: 1.9, ic: “💱”, d: “Rand weakness of 8.3% turbocharged your offshore holdings.” },
+{ l: “Smart stock picking”, v: 1.4, ic: “🎯”, d: “Manager selection — Naspers restructure and FirstRand earnings beat.” },
+{ l: “Allocation decisions”, v: 0.8, ic: “⚖️”, d: “Overweighting offshore equity and underweighting cash paid off.” },
+{ l: “Your timing”, v: 0.6, ic: “⏱️”, d: “Feb lump sum before rally: +R31k. Jul withdrawal during dip: -R18.6k.” },
+];
+return (
+<div className="space-y-6">
+<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-800 to-sky-900/40 border border-slate-700/50 p-6 sm:p-8">
+<p className="text-sm text-slate-500 mb-1">{P.name} · {P.period}</p>
+<h2 className="text-xl sm:text-2xl font-bold text-slate-100">Strong year driven by rand weakness and smart allocation — your timing helped too</h2>
+<div className="mt-5 flex flex-wrap gap-5">
+{[[“14.2%”,“Your return”,“text-sky-400”],[“9.2%”,“Benchmark”,“text-slate-500”],[”+5.0%”,“Outperformance”,“text-emerald-400”],[”+R237k”,“Value added”,“text-emerald-400”]].map(([v,l,c],i) => <div key={i}><div className={`text-2xl font-bold ${c}`}>{v}</div><div className="text-xs text-slate-500">{l}</div></div>)}
+</div>
+</div>
+<div className="bg-slate-800/60 rounded-xl border border-slate-700/50 p-5">
+<h3 className="text-lg font-semibold text-slate-200 mb-4">What drove your returns</h3>
+{drivers.map((d,i) => (
+<button key={i} onClick={() => setExp(exp===i?null:i)} className=“w-full text-left mb-2”>
+<div className="flex items-center gap-3 py-2"><span className="text-lg">{d.ic}</span><div className="flex-1"><div className="flex justify-between"><span className="text-sm text-slate-300">{d.l}</span><span className={`text-sm font-bold font-mono ${d.v>=0?"text-emerald-400":"text-red-400"}`}>{fmtPct(d.v)}</span></div><div className="mt-1 h-2 bg-slate-700/50 rounded-full overflow-hidden"><div className={`h-full rounded-full ${d.v>=0?"bg-emerald-500/70":"bg-red-500/70"}`} style={{width:`${(Math.abs(d.v)/2.5)*100}%`}}/></div></div></div>
+{exp===i && <div className="ml-9 mb-2 p-3 bg-slate-700/30 rounded-lg text-sm text-slate-400">{d.d}</div>}
+</button>
+))}
+</div>
+<div className="bg-slate-800/60 rounded-xl border border-slate-700/50 p-5">
+<h3 className="text-lg font-semibold text-slate-200 mb-4">Your performance story</h3>
+{pN.map((p,i) => <p key={i} className="text-sm text-slate-400 leading-relaxed mb-3">{p}</p>)}
+</div>
+<div className="bg-slate-800/60 rounded-xl border border-slate-700/50 p-5">
+<h3 className="text-lg font-semibold text-slate-200 mb-4">Risk snapshot</h3>
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+{[[“Volatility”,“9.8%”,“8.6%”],[“Max Drawdown”,”-6.4%”,”-5.8%”],[“Sharpe”,“1.12”,“0.74”],[“Downside Capture”,“88%”,”—”]].map(([l,f,b],i) => <div key={i} className="bg-slate-700/30 rounded-lg p-3 text-center"><div className="text-xl font-bold text-slate-200">{f}</div><div className="text-xs text-slate-500">{l}</div><div className="text-xs text-slate-600 mt-0.5">Bench: {b}</div></div>)}
+</div>
+</div>
+</div>
+);
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+FUND — DEVELOPER VIEW
+═══════════════════════════════════════════════════════════════════════════ */
+const FundDev = () => (
+
+  <div className="space-y-5">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {[[AG.size,"Fund Size"],[AG.ter,"TER"],[`${AG.pe}×`,"P/E Fund"],[`${AG.peBench}×`,"P/E Bench"]].map(([v,l],i) => <div key={i} className="bg-slate-800/60 rounded-lg p-4 border border-slate-700/40 text-center"><div className="text-2xl font-bold text-violet-400">{v}</div><div className="text-xs text-slate-500 mt-1">{l}</div></div>)}
+    </div>
+
+```
+<Card title="Fund Profile" sub={AG.name} accent="border-l-violet-500">
+  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+    {Object.entries({ASISA:AG.asisa,Benchmark:AG.bench,Period:AG.period,Approach:"Contrarian value via Orbis","Total Charge":AG.charge}).map(([k,v]) => <div key={k} className="bg-slate-700/30 rounded px-3 py-2"><span className="text-slate-500">{k}</span><div className="text-slate-300 font-medium">{v}</div></div>)}
+  </div>
+</Card>
+
+<Card title="Input → Top 10 Holdings" accent="border-l-violet-500">
+  <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="text-slate-500 border-b border-slate-700/50"><th className="text-left py-2 px-2">Holding</th><th className="text-right px-2">Wt</th><th className="px-2">Sector</th><th className="text-right px-2">Return</th><th className="text-left px-2">Story</th></tr></thead>
+  <tbody>{agH.map((h,i) => <tr key={i} className="border-b border-slate-700/20 hover:bg-slate-700/20"><td className="py-2 px-2 text-slate-300 font-medium">{h.n}</td><td className="text-right px-2 text-slate-400">{h.w}%</td><td className="px-2"><Badge>{h.s}</Badge></td><td className={`text-right px-2 font-mono font-medium ${h.r>=0?"text-emerald-400":"text-red-400"}`}>{fmtPct(h.r)}</td><td className="px-2 text-slate-500 max-w-xs">{h.d}</td></tr>)}</tbody></table></div>
+</Card>
+
+<Card title="Input → Sector Allocation" accent="border-l-violet-500">
+  <table className="w-full text-xs"><thead><tr className="text-slate-500 border-b border-slate-700/50"><th className="text-left py-2 px-2">Sector</th><th className="text-right px-2">Fund</th><th className="text-right px-2">Bench</th><th className="text-right px-2">Active</th><th className="text-right px-2">Fund R</th><th className="text-right px-2">Bench R</th></tr></thead>
+  <tbody>{agSec.map((s,i) => <tr key={i} className="border-b border-slate-700/20"><td className="py-2 px-2 text-slate-300">{s.n}</td><td className="text-right px-2 text-slate-400">{s.fw}%</td><td className="text-right px-2 text-slate-500">{s.bw}%</td><td className={`text-right px-2 font-medium ${s.fw-s.bw>0?"text-emerald-400":s.fw-s.bw<0?"text-red-400":"text-slate-400"}`}>{fmtPct(s.fw-s.bw)}</td><td className={`text-right px-2 ${s.fr>=0?"text-emerald-400":"text-red-400"}`}>{fmtPct(s.fr)}</td><td className="text-right px-2 text-slate-500">{fmtPct(s.br)}</td></tr>)}</tbody></table>
+</Card>
+
+<Card title="Input → Regional Allocation" sub="Significant US underweight vs MSCI World" accent="border-l-violet-500">
+  {agReg.map((r,i) => <div key={i} className="flex items-center gap-3 py-1.5"><span className="w-28 text-xs text-slate-400 flex-shrink-0">{r.n}</span><div className="flex-1 relative h-5"><div className="absolute top-0 h-2 rounded-full bg-violet-500/60" style={{width:`${(r.fw/75)*100}%`}}/><div className="absolute bottom-0 h-2 rounded-full bg-slate-600/60" style={{width:`${(r.bw/75)*100}%`}}/></div><span className="text-xs text-violet-400 w-12 text-right">{r.fw}%</span><span className="text-xs text-slate-500 w-12 text-right">{r.bw}%</span></div>)}
+  <div className="flex gap-4 mt-2 text-xs text-slate-500"><span className="flex items-center gap-1"><span className="w-3 h-2 bg-violet-500/60 rounded"/>Fund</span><span className="flex items-center gap-1"><span className="w-3 h-2 bg-slate-600/60 rounded"/>Bench</span></div>
+</Card>
+
+<Card title="Input → Macro Drivers" accent="border-l-amber-500">
+  {agMacro.map((m,i) => <div key={i} className="py-3 border-b border-slate-700/20 last:border-0"><div className="flex items-center gap-2 flex-wrap"><Badge variant={m.im}>{m.im}</Badge><span className="text-sm text-slate-300 font-medium">{m.f}</span><span className="text-xs text-slate-500">{m.p}</span><span className={`text-xs font-mono ml-auto ${m.ct.startsWith("+")?"text-emerald-400":m.ct.startsWith("-")?"text-red-400":"text-amber-400"}`}>{m.ct}</span></div><p className="text-xs text-slate-500 mt-1">{m.d}</p></div>)}
+</Card>
+
+<Card title="Input → Stock Events" accent="border-l-violet-500">
+  {agMicro.map((m,i) => <div key={i} className="flex items-start gap-3 py-2 border-b border-slate-700/20 last:border-0"><Badge variant={m.im.startsWith("+")?"positive":"negative"}>{m.im}</Badge><div className="flex-1"><div className="flex items-center gap-2"><span className="text-sm text-slate-300 font-medium">{m.ev}</span><Badge variant="info">{m.ty}</Badge><span className="text-xs text-slate-500">{m.dt}</span></div><p className="text-xs text-slate-500 mt-0.5">{m.d}</p></div></div>)}
+</Card>
+
+<Card title="Computed → Attribution" sub="No investor actions — pure TWR fund decomposition" accent="border-l-emerald-500">
+  <Waterfall max={35} items={[{label:"MSCI World (ZAR)",value:32.4,type:"base"},{label:"Stock Selection",value:4.8,type:"add"},{label:"Sector Alloc.",value:-1.2,type:"add"},{label:"Currency Mgmt",value:0.6,type:"add"},{label:"Interaction",value:0.4,type:"add"},{label:"Fees",value:-2.15,type:"add"},{label:"Fund (ZAR)",value:26.8,type:"total"}]} />
+  <div className="mt-4 p-3 bg-violet-900/20 border border-violet-700/30 rounded-lg text-xs text-violet-300">Fund-level analysis only. All returns are time-weighted. ZAR return = USD performance + currency translation.</div>
+</Card>
+
+<Card title="Computed → Factor Sensitivities" accent="border-l-emerald-500">
+  <table className="w-full text-xs"><thead><tr className="text-slate-500 border-b border-slate-700/50"><th className="text-left py-2 px-2">Factor</th><th className="px-2">Corr</th><th className="text-right px-2">Beta</th><th className="text-right px-2">Contrib</th><th className="text-left px-2">Direction</th></tr></thead>
+  <tbody>{agFact.map((f,i) => <tr key={i} className="border-b border-slate-700/20"><td className="py-2 px-2 text-slate-300">{f.f}</td><td className="px-2"><CorDot v={f.cor}/></td><td className="text-right px-2 text-slate-400 font-mono">{f.b.toFixed(2)}</td><td className={`text-right px-2 font-mono ${f.ct.startsWith("+")?"text-emerald-400":"text-red-400"}`}>{f.ct}</td><td className="text-left px-2 text-slate-500">{f.dir}</td></tr>)}</tbody></table>
+</Card>
+
+<Card title="Computed → Risk Metrics" accent="border-l-red-500">
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    {[["Volatility",`${agRisk.fVol}%`,`${agRisk.bVol}%`],["Max Drawdown",`${agRisk.fDD}%`,`${agRisk.bDD}%`],["Sharpe",agRisk.fSh.toFixed(2),agRisk.bSh.toFixed(2)],["Tracking Error",`${agRisk.te}%`,"—"],["Info Ratio",agRisk.ir.toFixed(2),"—"],["Beta",agRisk.beta.toFixed(2),"1.00"],["Upside Cap",`${agRisk.upCap}%`,"—"],["Downside Cap",`${agRisk.dnCap}%`,"—"]].map(([l,f,b],i) => <div key={i} className="bg-slate-700/30 rounded-lg p-3 text-center"><div className="text-lg font-bold text-slate-200">{f}</div><div className="text-xs text-slate-500">{l}</div><div className="text-xs text-slate-600 mt-0.5">Bench: {b}</div></div>)}
+  </div>
+</Card>
+```
+
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════════════════════════════
+FUND — USER REPORT VIEW
+═══════════════════════════════════════════════════════════════════════════ */
+const FundUser = () => {
+const [exp, setExp] = useState(null);
+const drivers = [
+{ l: “Stock selection (bottom-up)”, v: 4.8, ic: “🎯”, d: “About half outperformed, but winners won much more than losers lost. QXO (+42%), Nintendo (+31.5%), PayPal (+22.8%) led.” },
+{ l: “Currency management”, v: 0.6, ic: “💱”, d: “Active positioning added value. ZAR weakness of 8.3% further amplified returns for SA investors.” },
+{ l: “Interaction effects”, v: 0.4, ic: “🔗”, d: “Being overweight where stock picking was also strong created a compounding benefit.” },
+{ l: “Sector allocation (headwind)”, v: -1.2, ic: “⚖️”, d: “Underweighting US mega-cap tech (19.9% vs 22.2%) and consumer cyclicals hurt as those sectors led.” },
+{ l: “Fees”, v: -2.15, ic: “💰”, d: “Total charge 2.15% (incl. 0.82% performance fee). Orbis’s refundable fee structure aligns interests.” },
+];
+return (
+<div className="space-y-6">
+<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-800 to-violet-900/40 border border-slate-700/50 p-6 sm:p-8">
+<div className="flex items-center gap-2 mb-2"><div className="w-6 h-6 rounded bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white">AG</div><span className="text-xs text-slate-500">{AG.name} · {AG.period}</span></div>
+<h2 className="text-xl sm:text-2xl font-bold text-slate-100 leading-tight">Contrarian stock picking delivered in a volatile year — value’s time isn’t here yet, but Orbis found alpha anyway</h2>
+<p className="text-sm text-slate-400 mt-3">The fund outperformed through bottom-up selection despite macro headwinds from its value and mid-cap tilts.</p>
+<div className="mt-5 flex flex-wrap gap-5">
+{[[“~26.8%”,“Fund (ZAR)”,“text-violet-400”],[“~32.4%”,“MSCI World (ZAR)”,“text-slate-500”],[“18×”,“Fund P/E”,“text-emerald-400”],[“28×”,“Bench P/E”,“text-amber-400”]].map(([v,l,c],i) => <div key={i}><div className={`text-2xl font-bold ${c}`}>{v}</div><div className="text-xs text-slate-500">{l}</div></div>)}
+</div>
+</div>
+
+```
+  <div className="bg-slate-800/60 rounded-xl border border-slate-700/50 p-5">
+    <h3 className="text-lg font-semibold text-slate-200 mb-1">What drove the fund's returns</h3>
+    <p className="text-xs text-slate-500 mb-4">Bottom-up picks were the primary alpha source — not macro bets</p>
+    {drivers.map((d,i) => (
+      <button key={i} onClick={() => setExp(exp===i?null:i)} className="w-full text-left mb-2">
+        <div className="flex items-center gap-3 py-2"><span className="text-lg">{d.ic}</span><div className="flex-1"><div className="flex justify-between"><span className="text-sm text-slate-300">{d.l}</span><span className={`text-sm font-bold font-mono ${d.v>=0?"text-emerald-400":"text-red-400"}`}>{fmtPct(d.v)}</span></div><div className="mt-1 h-2 bg-slate-700/50 rounded-full overflow-hidden"><div className={`h-full rounded-full ${d.v>=0?"bg-emerald-500/70":"bg-red-500/70"}`} style={{width:`${(Math.abs(d.v)/5.5)*100}%`}}/></div></div></div>
+        {exp===i && <div className="ml-9 mb-2 p-3 bg-slate-700/30 rounded-lg text-sm text-slate-400">{d.d}</div>}
+      </button>
+    ))}
+  </div>
+
+  <div className="bg-slate-800/60 rounded-xl border border-slate-700/50 p-5">
+    <h3 className="text-lg font-semibold text-slate-200 mb-1">Stock stories that mattered</h3>
+    <p className="text-xs text-slate-500 mb-4">Biggest contributors and detractors</p>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {agH.slice(0,8).sort((a,b) => Math.abs(b.r)-Math.abs(a.r)).map((h,i) => (
+        <div key={i} className={`rounded-lg p-3 border ${h.r>=0?"bg-emerald-900/10 border-emerald-800/30":"bg-red-900/10 border-red-800/30"}`}>
+          <div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-200 font-medium">{h.n}</span><span className={`text-sm font-bold font-mono ${h.r>=0?"text-emerald-400":"text-red-400"}`}>{fmtPct(h.r)}</span></div>
+          <div className="flex items-center gap-2 mb-1"><Badge>{h.s}</Badge><span className="text-xs text-slate-500">{h.w}% of fund</span></div>
+          <p className="text-xs text-slate-500">{h.d}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div className="bg-slate-800/60 rounded-xl border border-slate-700/50 p-5">
+    <h3 className="text-lg font-semibold text-slate-200 mb-1">The market environment</h3>
+    <p className="text-xs text-slate-500 mb-4">Key forces shaping global markets in 2025</p>
+    {agMacro.map((m,i) => <div key={i} className="flex items-start gap-3 py-3 border-b border-slate-700/20 last:border-0"><div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${m.im==="positive"?"bg-emerald-400":m.im==="negative"?"bg-red-400":"bg-amber-400"}`}/><div className="flex-1"><div className="flex items-center gap-2 flex-wrap"><span className="text-sm text-slate-300 font-medium">{m.f}</span><span className="text-xs text-slate-500">{m.p}</span></div><p className="text-xs text-slate-500 mt-0.5">{m.d}</p></div></div>)}
+  </div>
+
+  <div className="bg-slate-800/60 rounded-xl border border-slate-700/50 p-5">
+    <h3 className="text-lg font-semibold text-slate-200 mb-4">Full performance commentary</h3>
+    {agNarr.map((p,i) => <p key={i} className="text-sm text-slate-400 leading-relaxed mb-3">{p}</p>)}
+  </div>
+
+  <div className="bg-slate-800/60 rounded-xl border border-slate-700/50 p-5">
+    <h3 className="text-lg font-semibold text-slate-200 mb-4">Risk snapshot</h3>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {[["Volatility",`${agRisk.fVol}%`,`${agRisk.bVol}%`,"Slightly above"],["Max Drawdown",`${agRisk.fDD}%`,`${agRisk.bDD}%`,"Feb–Apr tariffs"],["Sharpe",agRisk.fSh.toFixed(2),agRisk.bSh.toFixed(2),"Good risk-adj."],["Downside Cap",`${agRisk.dnCap}%`,"—","Decent protection"]].map(([l,f,b,n],i) => <div key={i} className="bg-slate-700/30 rounded-lg p-3 text-center"><div className="text-xl font-bold text-slate-200">{f}</div><div className="text-xs text-slate-500">{l}</div><div className="text-xs text-slate-600 mt-0.5">Bench: {b}</div><div className="text-xs text-violet-400/70 mt-0.5">{n}</div></div>)}
+    </div>
+  </div>
+
+  <div className="bg-gradient-to-r from-violet-900/30 to-slate-800/60 rounded-xl border border-violet-700/30 p-5">
+    <h3 className="text-lg font-semibold text-violet-300 mb-2">Looking ahead: The valuation case</h3>
+    <p className="text-sm text-slate-400 leading-relaxed">The fund trades at 18× normalised earnings vs 28× for the MSCI World — a ~36% discount for companies with comparable or better growth. Orbis increased turnover meaningfully, rotating into healthcare (now 10%), AI consumables, and high-conviction laggards. History suggests wide valuation gaps narrow over time.</p>
+  </div>
+</div>
+```
+
+);
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+MAIN APP — TAB NAVIGATION
+═══════════════════════════════════════════════════════════════════════════ */
+export default function App() {
+const [mode, setMode] = useState(“fund”);
+const [sub, setSub] = useState(“user”);
+const isFund = mode === “fund”;
+
+return (
+<div className=“min-h-screen bg-slate-900 text-slate-100” style={{ fontFamily: “‘DM Sans’, ‘Segoe UI’, system-ui, sans-serif” }}>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+
+```
+  <div className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur border-b border-slate-800">
+    <div className="max-w-5xl mx-auto px-4 py-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sky-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white">PI</div>
+          <span className="text-sm font-semibold text-slate-300 tracking-tight hidden sm:block">Performance Interpreter</span>
+        </div>
+        <div className="flex gap-1">
+          {[["portfolio","Portfolio"],["fund","Fund Analysis"]].map(([id,l]) => <button key={id} onClick={() => setMode(id)} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${mode===id?"bg-slate-700 text-white":"text-slate-500 hover:text-slate-300"}`}>{l}</button>)}
+        </div>
+      </div>
+      <div className="flex justify-end mt-2">
+        <div className="flex bg-slate-800 rounded-lg p-0.5 border border-slate-700/50">
+          {[["dev","Developer View"],["user",isFund?"Fund Report":"Investor View"]].map(([id,l]) => <button key={id} onClick={() => setSub(id)} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${sub===id?(isFund?"bg-violet-600 text-white":"bg-sky-600 text-white"):"text-slate-400 hover:text-slate-200"}`}>{l}</button>)}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div className="max-w-5xl mx-auto px-4 py-6 pb-16">
+    {mode==="portfolio" && sub==="dev" && <><div className="mb-5"><h1 className="text-xl font-bold text-slate-200">Internal Pipeline — Portfolio</h1><p className="text-sm text-slate-500">All inputs and computed metrics for Thabo's Balanced Growth Fund</p></div><PortDev /></>}
+    {mode==="portfolio" && sub==="user" && <><div className="mb-5"><p className="text-sm text-slate-500">Hello Thabo, here's your investment review for 2025</p></div><PortUser /></>}
+    {mode==="fund" && sub==="dev" && <><div className="mb-5"><h1 className="text-xl font-bold text-violet-300">Internal Pipeline — Fund Analysis</h1><p className="text-sm text-slate-500">Allan Gray-Orbis Global Equity Feeder Fund · Pure TWR decomposition</p></div><FundDev /></>}
+    {mode==="fund" && sub==="user" && <><div className="mb-5"><p className="text-sm text-slate-500">Fund performance analysis · Year ended 31 December 2025</p></div><FundUser /></>}
+  </div>
+</div>
+```
+
+);
+}
