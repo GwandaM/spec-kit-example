@@ -1,0 +1,253 @@
+-----
+
+## title: Investment Performance Interpreter — Data Model & Interactions
+
+erDiagram
+
+```
+PORTFOLIO {
+    string portfolio_id PK
+    string investor_id FK
+    string name
+    string benchmark_id FK
+    string mandate_type
+    date inception_date
+    float total_value
+    string currency
+}
+
+HOLDINGS {
+    string holding_id PK
+    string portfolio_id FK
+    string instrument_id FK
+    float weight_pct
+    float units
+    float market_value
+    date as_at_date
+    string asset_class
+    string sector
+    string geography
+}
+
+INSTRUMENT {
+    string instrument_id PK
+    string name
+    string ticker
+    string asset_class
+    string sector
+    string geography
+    string currency
+    float pe_ratio
+    float dividend_yield
+    float duration
+    string credit_rating
+    float market_cap
+    string style_factor
+}
+
+BENCHMARK {
+    string benchmark_id PK
+    string name
+    string index_code
+    string asset_class
+}
+
+BENCHMARK_RETURNS {
+    string benchmark_id FK
+    date period_date
+    float total_return
+    float price_return
+    float income_return
+}
+
+MARKET_RETURNS {
+    string return_id PK
+    string instrument_id FK
+    date period_date
+    float total_return
+    float price_return
+    float income_return
+    float volatility
+    float max_drawdown
+}
+
+PORTFOLIO_RETURNS {
+    string return_id PK
+    string portfolio_id FK
+    date period_date
+    float twr_gross
+    float twr_net
+    float mwr_irr
+    float volatility
+    float max_drawdown
+    float sharpe_ratio
+    float sortino_ratio
+    float alpha
+    float beta
+    float tracking_error
+    float info_ratio
+    float upside_capture
+    float downside_capture
+}
+
+INVESTOR_ACTIONS {
+    string action_id PK
+    string portfolio_id FK
+    date action_date
+    string action_type
+    float amount
+    string from_fund
+    string to_fund
+    string reason
+}
+
+MACRO_FACTORS {
+    string factor_id PK
+    date period_date
+    string region
+    float gdp_growth
+    float cpi_inflation
+    float repo_rate
+    float unemployment
+    float consumer_confidence
+    float pmi
+    float vix
+    float credit_spread
+}
+
+CURRENCY_RATES {
+    string rate_id PK
+    date period_date
+    string base_ccy
+    string quote_ccy
+    float exchange_rate
+    float period_change_pct
+}
+
+COMMODITY_PRICES {
+    string commodity_id PK
+    date period_date
+    string commodity_name
+    float price_usd
+    float period_change_pct
+}
+
+YIELD_CURVE {
+    string curve_id PK
+    date period_date
+    string region
+    float rate_3m
+    float rate_1y
+    float rate_2y
+    float rate_5y
+    float rate_10y
+    float rate_30y
+    string shape
+}
+
+MICRO_FACTORS {
+    string factor_id PK
+    string instrument_id FK
+    date event_date
+    string event_type
+    float earnings_surprise_pct
+    float revenue_growth
+    float margin_change
+    string rating_action
+    string description
+}
+
+ATTRIBUTION_RESULTS {
+    string attribution_id PK
+    string portfolio_id FK
+    date period_start
+    date period_end
+    string method
+    float allocation_effect
+    float selection_effect
+    float interaction_effect
+    float currency_effect
+    float cash_flow_timing_effect
+    float total_active_return
+}
+
+FACTOR_SENSITIVITY {
+    string sensitivity_id PK
+    string portfolio_id FK
+    date period_date
+    string factor_name
+    float correlation
+    float beta_to_factor
+    float contribution_pct
+}
+
+SECTOR_MACRO_LINK {
+    string link_id PK
+    string sector
+    string macro_factor
+    float correlation
+    float lag_months
+    string direction
+    string narrative
+}
+
+BEHAVIOURAL_METRICS {
+    string metric_id PK
+    string portfolio_id FK
+    date period_start
+    date period_end
+    float twr_mwr_gap
+    float switching_cost
+    float withdrawal_timing_cost
+    float contribution_timing_benefit
+    float rebalancing_impact
+    int switch_frequency
+    string behaviour_label
+}
+
+PERFORMANCE_NARRATIVE {
+    string narrative_id PK
+    string portfolio_id FK
+    date period_start
+    date period_end
+    string headline
+    text full_narrative
+    json driver_rankings
+    json risk_commentary
+    json outlook_factors
+}
+
+%% ── Core Relationships ──
+PORTFOLIO ||--o{ HOLDINGS : contains
+PORTFOLIO ||--o{ PORTFOLIO_RETURNS : generates
+PORTFOLIO ||--o{ INVESTOR_ACTIONS : receives
+PORTFOLIO ||--|| BENCHMARK : measured_against
+
+HOLDINGS }o--|| INSTRUMENT : references
+INSTRUMENT ||--o{ MARKET_RETURNS : has
+INSTRUMENT ||--o{ MICRO_FACTORS : affected_by
+BENCHMARK ||--o{ BENCHMARK_RETURNS : tracks
+
+%% ── Analysis Outputs ──
+PORTFOLIO ||--o{ ATTRIBUTION_RESULTS : decomposed_into
+PORTFOLIO ||--o{ FACTOR_SENSITIVITY : exposes
+PORTFOLIO ||--o{ BEHAVIOURAL_METRICS : reveals
+PORTFOLIO ||--o{ PERFORMANCE_NARRATIVE : explained_by
+
+%% ── Macro Environment Links ──
+FACTOR_SENSITIVITY }o--|| MACRO_FACTORS : correlates_with
+FACTOR_SENSITIVITY }o--|| CURRENCY_RATES : correlates_with
+FACTOR_SENSITIVITY }o--|| COMMODITY_PRICES : correlates_with
+FACTOR_SENSITIVITY }o--|| YIELD_CURVE : correlates_with
+SECTOR_MACRO_LINK }o--|| MACRO_FACTORS : maps_to
+
+%% ── Interaction Chains ──
+ATTRIBUTION_RESULTS }o--|| HOLDINGS : driven_by_weights
+ATTRIBUTION_RESULTS }o--|| MARKET_RETURNS : driven_by_returns
+ATTRIBUTION_RESULTS }o--|| BENCHMARK_RETURNS : relative_to
+BEHAVIOURAL_METRICS }o--|| INVESTOR_ACTIONS : quantifies_impact
+BEHAVIOURAL_METRICS }o--|| PORTFOLIO_RETURNS : twr_vs_mwr
+PERFORMANCE_NARRATIVE }o--|| ATTRIBUTION_RESULTS : synthesises
+PERFORMANCE_NARRATIVE }o--|| BEHAVIOURAL_METRICS : incorporates
+PERFORMANCE_NARRATIVE }o--|| FACTOR_SENSITIVITY : references
+```
